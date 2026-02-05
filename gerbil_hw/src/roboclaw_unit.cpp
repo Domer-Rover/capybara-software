@@ -107,6 +107,14 @@ bool RoboClawUnit::write()
       m2_speed = joints[1]->getTickRateCommand();
     }
 
+    // Debug output (remove after testing)
+    static int count = 0;
+    if (++count % 20 == 0) {  // Print every 20 cycles (every 1 second at 20Hz)
+      std::cout << "[RoboClawUnit] Writing to address 0x" << std::hex 
+                << static_cast<int>(address_) << std::dec 
+                << " M1: " << m1_speed << " M2: " << m2_speed << std::endl;
+    }
+
     // Write the rate request to the roboclaw driver
     interface_->write(tick_rate_command_, address_);
     return true;
