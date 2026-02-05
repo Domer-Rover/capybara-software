@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <cstring>
 
 #include <cstdint>
 #include <iostream>
@@ -107,21 +108,20 @@ private:
   void setSerialDeviceOptions()
   {
     struct termios options;
-    tcgetattr(fd_, &options);
+    memset(&options, 0, sizeof(options));
     
-    // Set baud rate to 38400 (RoboClaw default)
-    cfsetispeed(&options, B38400);
-    cfsetospeed(&options, B38400);
-    
-    options.c_cflag = CS8 | CLOCAL | CREAD;
+    // Set baud rate and flags together (B38400 is part of c_cflag)
+    options.c_cflag = B38400 | CS8 | CLOCAL | CREAD;
     options.c_iflag = IGNPAR;
     options.c_oflag = 0;
     options.c_lflag = 0;
+    
+    // Set VMIN and VTIME for read behavior
+    options.c_cc[VMIN] = 0;   // Non-blocking read
+    options.c_cc[VTIME] = 1;  // 100ms timeout (in tenths of seconds)
+    
     tcflush(fd_, TCIFLUSH);
     tcsetattr(fd_, TCSANOW, &options);
-
-    // Set the file descriptor to non-blocking mode
-    fcntl(fd_, F_SETFL, O_NONBLOCK);
   }
 
   int fd_ = -1;
