@@ -105,7 +105,8 @@ return_type RoboClawHardwareInterface::write(const rclcpp::Time &, const rclcpp:
 {
   static int write_count = 0;
   if (++write_count % 20 == 0) {
-    std::cout << "=== [HardwareInterface] write() called " << write_count << " times ===" << std::endl;
+    RCLCPP_INFO(rclcpp::get_logger("RoboClawHardwareInterface"), 
+                "=== write() called %d times ===", write_count);
   }
   
   for (auto & roboclaw : roboclaw_units_) {
@@ -118,7 +119,8 @@ return_type RoboClawHardwareInterface::read(const rclcpp::Time &, const rclcpp::
 {
   static int read_count = 0;
   if (++read_count % 20 == 0) {
-    std::cout << "=== [HardwareInterface] read() called " << read_count << " times ===" << std::endl;
+    RCLCPP_INFO(rclcpp::get_logger("RoboClawHardwareInterface"), 
+                "=== read() called %d times ===", read_count);
   }
   
   for (auto & roboclaw : roboclaw_units_) {

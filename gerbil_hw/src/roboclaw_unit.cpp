@@ -17,6 +17,7 @@
 #include <iostream>
 #include <map>
 #include <stdexcept>
+#include <rclcpp/rclcpp.hpp>
 #include <roboclaw_serial/command.hpp>
 #include <roboclaw_serial/interface.hpp>
 
@@ -110,9 +111,9 @@ bool RoboClawUnit::write()
     // Debug output (remove after testing)
     static int count = 0;
     if (++count % 20 == 0) {  // Print every 20 cycles (every 1 second at 20Hz)
-      std::cout << "[RoboClawUnit] Writing to address 0x" << std::hex 
-                << static_cast<int>(address_) << std::dec 
-                << " M1: " << m1_speed << " M2: " << m2_speed << std::endl;
+      RCLCPP_INFO(rclcpp::get_logger("RoboClawUnit"), 
+                  "Writing to address 0x%02X M1: %d M2: %d", 
+                  address_, m1_speed, m2_speed);
     }
 
     // Write the rate request to the roboclaw driver
