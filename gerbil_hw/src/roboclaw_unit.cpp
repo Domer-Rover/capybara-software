@@ -42,7 +42,7 @@ RoboClawUnit::RoboClawUnit(
 bool RoboClawUnit::read()
 {
   try {
-    // Read and update position
+    // Read and update position (CRITICAL - must succeed)
     interface_->read(encoder_state_, address_);
 
     // Get constant references to fields in the encoder counts message
@@ -56,29 +56,36 @@ bool RoboClawUnit::read()
       joints[1]->setPositionState(m2_ticks);
     }
 
-    // Read and update velocity for M1
-    interface_->read(encoder_speed_m1_, address_);
-    const auto & [m1_speed, m1_status] = encoder_speed_m1_.fields;
-    if (joints[0]) {
-      joints[0]->setVelocityState(m1_speed);
-    }
-
-    // Read and update velocity for M2
-    interface_->read(encoder_speed_m2_, address_);
-    const auto & [m2_speed, m2_status] = encoder_speed_m2_.fields;
-    if (joints[1]) {
-      joints[1]->setVelocityState(m2_speed);
+    // Try to read velocity - if this fails, we still have position (non-critical)
+    try {
+      // Read M1 speed
+      if (joints[0]) {
+        interface_->read(encoder_speed_m1_, address_);
+        const auto & [m1_speed, m1_status] = encoder_speed_m1_.fields;
+        joints[0]->setVelocityState(m1_speed);
+      }
+      
+      // Read M2 speed
+      if (joints[1]) {
+        interface_->read(encoder_speed_m2_, address_);
+        const auto & [m2_speed, m2_status] = encoder_speed_m2_.fields;
+        joints[1]->setVelocityState(m2_speed);
+      }
+    } catch (const std::exception & e) {
+      // Velocity read failed - not critical, position is enough
+      // Only log occasionally to avoid spam
+      static int error_count = 0;
+      if (++error_count % 100 == 0) {
+        std::cerr << "[RoboClawUnit] Velocity read errors on address 0x" 
+                  << std::hex << static_cast<int>(address_) << std::dec 
+                  << " (count: " << error_count << ")" << std::endl;
+      }
     }
     
     return true;
-  } catch (const std::logic_error & e) {
-    // CRC mismatch or communication error - log and continue
-    std::cerr << "[RoboClawUnit] Serial read error on address 0x" 
-              << std::hex << static_cast<int>(address_) << std::dec 
-              << ": " << e.what() << std::endl;
-    return false;
   } catch (const std::exception & e) {
-    std::cerr << "[RoboClawUnit] Unexpected error during read on address 0x" 
+    // Position read failed - this is critical!
+    std::cerr << "[RoboClawUnit] Critical position read error on address 0x" 
               << std::hex << static_cast<int>(address_) << std::dec 
               << ": " << e.what() << std::endl;
     return false;
@@ -88,30 +95,23 @@ bool RoboClawUnit::read()
 // Write the tick rate request to the roboclaw and update
 bool RoboClawUnit::write()
 {
-  // Get references to fields in the tick rate command message
-  auto & [m1_speed, m2_speed] = tick_rate_command_.fields;
-
-  // Set values to each field if the corresponding joint exists
-  if (joints[0]) {
-    m1_speed = joints[0]->getTickRateCommand();
-  }
-  if (joints[1]) {
-    m2_speed = joints[1]->getTickRateCommand();
-  }
-
   try {
+    // Get references to fields in the tick rate command message
+    auto & [m1_speed, m2_speed] = tick_rate_command_.fields;
+
+    // Set values to each field if the corresponding joint exists
+    if (joints[0]) {
+      m1_speed = joints[0]->getTickRateCommand();
+    }
+    if (joints[1]) {
+      m2_speed = joints[1]->getTickRateCommand();
+    }
+
     // Write the rate request to the roboclaw driver
     interface_->write(tick_rate_command_, address_);
     return true;
-  } catch (const std::logic_error & e) {
-    // ACK not received or communication error - motors may not have received command!
-    std::cerr << "[RoboClawUnit] Serial write error on address 0x" 
-              << std::hex << static_cast<int>(address_) << std::dec 
-              << ": " << e.what() 
-              << " - MOTORS MAY NOT HAVE RECEIVED VELOCITY COMMAND!" << std::endl;
-    return false;
   } catch (const std::exception & e) {
-    std::cerr << "[RoboClawUnit] Unexpected error during write on address 0x" 
+    std::cerr << "[RoboClawUnit] Write error on address 0x" 
               << std::hex << static_cast<int>(address_) << std::dec 
               << ": " << e.what() << std::endl;
     return false;
