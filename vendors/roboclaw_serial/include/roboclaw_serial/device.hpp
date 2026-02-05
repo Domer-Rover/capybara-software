@@ -129,23 +129,19 @@ private:
     // Get current options first
     tcgetattr(fd_, &options);
     
-    // Set baud rate using proper functions
+    // Use cfmakeraw for proper raw mode (like Python pyserial)
+    cfmakeraw(&options);
+    
+    // Set baud rate
     cfsetispeed(&options, B38400);
     cfsetospeed(&options, B38400);
     
-    // Configure for raw mode
-    options.c_cflag |= (CS8 | CLOCAL | CREAD);
-    options.c_cflag &= ~(PARENB | CSTOPB | CRTSCTS);
-    
-    options.c_iflag = IGNPAR;
-    options.c_iflag &= ~(IXON | IXOFF | IXANY);
-    
-    options.c_oflag = 0;
-    options.c_lflag = 0;
+    // Enable receiver and set local mode
+    options.c_cflag |= (CLOCAL | CREAD);
     
     // Set VMIN and VTIME for read behavior
     options.c_cc[VMIN] = 0;   // Non-blocking read
-    options.c_cc[VTIME] = 2;  // 200ms timeout (in tenths of seconds)
+    options.c_cc[VTIME] = 1;  // 100ms timeout (in tenths of seconds)
     
     tcflush(fd_, TCIOFLUSH);
     tcsetattr(fd_, TCSANOW, &options);
