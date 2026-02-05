@@ -64,46 +64,55 @@ public:
 
   virtual std::size_t write(const std::byte * buffer, std::size_t count)
   {
+    // Flush any pending input before writing a new command
+    tcflush(fd_, TCIFLUSH);
+    
     ssize_t result = ::write(fd_, buffer, count);
     if (result < 0) {
-      // Error writing to device
       throw std::range_error("Error writing to the device!");
     }
+    
+    // Wait for output to be transmitted
+    tcdrain(fd_);
+    
     return static_cast<std::size_t>(result) == count;
   }
 
   virtual std::size_t read(std::byte * buffer, std::size_t count)
   {
     std::size_t total_read = 0;
+    int max_retries = 50;  // 50 * 20ms = 1 second total timeout
     
-    while (total_read < count) {
+    while (total_read < count && max_retries > 0) {
       fd_set set;
       struct timeval timeout;
 
-      /* Initialize the file descriptor set. */
       FD_ZERO(&set);
       FD_SET(fd_, &set);
 
-      /* Initialize the timeout data structure. */
+      // 20ms timeout per select call
       timeout.tv_sec = 0;
-      timeout.tv_usec = 100000;  // 100ms timeout per chunk
+      timeout.tv_usec = 20000;
 
-      /* select returns 0 if timeout, 1 if input available, -1 if error. */
       int res = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
       if (res < 0) {
         throw std::range_error("Error reading from the serial device!");
       } else if (res == 0) {
-        throw std::runtime_error("Read timeout!");
+        // Timeout - retry
+        max_retries--;
+        continue;
       }
       
       ssize_t result = ::read(fd_, buffer + total_read, count - total_read);
       if (result < 0) {
         throw std::range_error("Error reading from the serial device!");
-      } else if (result == 0) {
-        throw std::runtime_error("Read timeout!");
+      } else if (result > 0) {
+        total_read += static_cast<std::size_t>(result);
       }
-      
-      total_read += static_cast<std::size_t>(result);
+    }
+    
+    if (total_read < count) {
+      throw std::runtime_error("Read timeout!");
     }
 
     return total_read;
@@ -116,19 +125,29 @@ private:
   void setSerialDeviceOptions()
   {
     struct termios options;
-    memset(&options, 0, sizeof(options));
     
-    // Set baud rate and flags together (B38400 is part of c_cflag)
-    options.c_cflag = B38400 | CS8 | CLOCAL | CREAD;
+    // Get current options first
+    tcgetattr(fd_, &options);
+    
+    // Set baud rate using proper functions
+    cfsetispeed(&options, B38400);
+    cfsetospeed(&options, B38400);
+    
+    // Configure for raw mode
+    options.c_cflag |= (CS8 | CLOCAL | CREAD);
+    options.c_cflag &= ~(PARENB | CSTOPB | CRTSCTS);
+    
     options.c_iflag = IGNPAR;
+    options.c_iflag &= ~(IXON | IXOFF | IXANY);
+    
     options.c_oflag = 0;
     options.c_lflag = 0;
     
     // Set VMIN and VTIME for read behavior
     options.c_cc[VMIN] = 0;   // Non-blocking read
-    options.c_cc[VTIME] = 1;  // 100ms timeout (in tenths of seconds)
+    options.c_cc[VTIME] = 2;  // 200ms timeout (in tenths of seconds)
     
-    tcflush(fd_, TCIFLUSH);
+    tcflush(fd_, TCIOFLUSH);
     tcsetattr(fd_, TCSANOW, &options);
   }
 
