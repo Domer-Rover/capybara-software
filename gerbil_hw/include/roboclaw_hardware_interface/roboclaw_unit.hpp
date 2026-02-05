@@ -36,7 +36,7 @@ public:
   // Read the encoder counts from the roboclaw and update position state
   void read();
 
-  // Convert the velocity command to tick rate request and write to the roboclaw
+  // Conver the velocity command to tick rate request and write to the roboclaw
   void write();
 
 private:

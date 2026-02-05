@@ -27,7 +27,6 @@
                 <param name="max">10.0</param>
             </command_interface>
             <state_interface name="position"/>
-            <state_interface name="velocity"/>
             <!-- TODO Verify these parameters -->
             <param name="address">128</param>
             <param name="qppr">500</param>
@@ -39,7 +38,6 @@
                 <param name="max">10.0</param>
             </command_interface>
             <state_interface name="position"/>
-            <state_interface name="velocity"/>
             <!-- TODO Verify these parameters -->
             <param name="address">128</param>
             <param name="qppr">500</param>

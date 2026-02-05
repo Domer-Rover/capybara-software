@@ -14,6 +14,9 @@
 
 #include "roboclaw_hardware_interface/roboclaw_unit.hpp"
 
+#include <algorithm>
+#include <chrono>
+#include <iostream>
 #include <map>
 #include <roboclaw_serial/command.hpp>
 #include <roboclaw_serial/interface.hpp>
@@ -39,18 +42,27 @@ RoboClawUnit::RoboClawUnit(
 // Read the encoder counts from the roboclaw and update position state
 void RoboClawUnit::read()
 {
-  // Read and update position
-  interface_->read(encoder_state_, address_);
+  try {
+    // Read both encoders in single transaction
+    interface_->read(encoder_state_, address_);
+    const auto & [m1_ticks, m2_ticks] = encoder_state_.fields;
 
-  // Get constant references to fields in the encoder counts message
-  const auto & [m1_ticks, m2_ticks] = encoder_state_.fields;
-
-  // Convert tick counts to position states for each field if the corresponding joint exists
-  if (joints[0]) {
-    joints[0]->setPositionState(m1_ticks);
-  }
-  if (joints[1]) {
-    joints[1]->setPositionState(m2_ticks);
+    // Convert tick counts to position states
+    if (joints[0]) {
+      joints[0]->setPositionState(m1_ticks);
+    }
+    if (joints[1]) {
+      joints[1]->setPositionState(m2_ticks);
+    }
+  } catch (const std::exception & e) {
+    static auto last_log = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
+    if (std::chrono::duration_cast<std::chrono::seconds>(now - last_log).count() >= 5) {
+      std::cerr << "[RoboClawUnit] Read error from RoboClaw 0x" << std::hex
+                << static_cast<int>(address_) << std::dec << ": " << e.what() << std::endl;
+      last_log = now;
+    }
+    return;
   }
 }
 
@@ -61,6 +73,7 @@ void RoboClawUnit::write()
   auto & [m1_speed, m2_speed] = tick_rate_command_.fields;
 
   // Set values to each field if the corresponding joint exists
+  // Use the properly calculated tick rate from the motor joint
   if (joints[0]) {
     m1_speed = joints[0]->getTickRateCommand();
   }
@@ -68,7 +81,18 @@ void RoboClawUnit::write()
     m2_speed = joints[1]->getTickRateCommand();
   }
 
-  // Write the rate request to the roboclaw driver
-  interface_->write(tick_rate_command_, address_);
+  // Write the speed command to the roboclaw driver
+  try {
+    interface_->write(tick_rate_command_, address_);
+  } catch (const std::exception & e) {
+    static auto last_log = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
+    if (std::chrono::duration_cast<std::chrono::seconds>(now - last_log).count() >= 5) {
+      std::cerr << "[RoboClawUnit] Write error to RoboClaw 0x" << std::hex
+                << static_cast<int>(address_) << std::dec << ": " << e.what() << std::endl;
+      last_log = now;
+    }
+    return;
+  }
 }
 }  // namespace roboclaw_hardware_interface

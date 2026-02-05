@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <cstring>
 
 #include <cstdint>
 #include <iostream>
@@ -64,58 +63,41 @@ public:
 
   virtual std::size_t write(const std::byte * buffer, std::size_t count)
   {
-    // Flush any pending input before writing a new command
-    tcflush(fd_, TCIFLUSH);
-    
     ssize_t result = ::write(fd_, buffer, count);
     if (result < 0) {
+      // Error writing to device
       throw std::range_error("Error writing to the device!");
     }
-    
-    // Wait for output to be transmitted
-    tcdrain(fd_);
-    
     return static_cast<std::size_t>(result) == count;
   }
 
   virtual std::size_t read(std::byte * buffer, std::size_t count)
   {
-    std::size_t total_read = 0;
-    int max_retries = 50;  // 50 * 20ms = 1 second total timeout
-    
-    while (total_read < count && max_retries > 0) {
-      fd_set set;
-      struct timeval timeout;
+    fd_set set;
+    struct timeval timeout;
 
-      FD_ZERO(&set);
-      FD_SET(fd_, &set);
+    /* Initialize the file descriptor set. */
+    FD_ZERO(&set);
+    FD_SET(fd_, &set);
 
-      // 20ms timeout per select call
-      timeout.tv_sec = 0;
-      timeout.tv_usec = 20000;
+    /* Initialize the timeout data structure. */
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 10000;  // 10ms
 
-      int res = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
-      if (res < 0) {
-        throw std::range_error("Error reading from the serial device!");
-      } else if (res == 0) {
-        // Timeout - retry
-        max_retries--;
-        continue;
-      }
-      
-      ssize_t result = ::read(fd_, buffer + total_read, count - total_read);
-      if (result < 0) {
-        throw std::range_error("Error reading from the serial device!");
-      } else if (result > 0) {
-        total_read += static_cast<std::size_t>(result);
-      }
-    }
-    
-    if (total_read < count) {
+    /* select returns 0 if timeout, 1 if input available, -1 if error. */
+    int res = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
+    if (res < 0) {
+      throw std::range_error("Error reading from the serial device!");
+    } else if (res == 0) {
       throw std::runtime_error("Read timeout!");
     }
+    ssize_t result = ::read(fd_, buffer, count);
+    if (result < 0) {
+      // Error reading from the device
+      throw std::range_error("Error reading from the serial device!");
+    }
 
-    return total_read;
+    return static_cast<std::size_t>(result);
   }
 
 protected:
@@ -125,26 +107,21 @@ private:
   void setSerialDeviceOptions()
   {
     struct termios options;
-    
-    // Get current options first
     tcgetattr(fd_, &options);
-    
-    // Use cfmakeraw for proper raw mode (like Python pyserial)
-    cfmakeraw(&options);
-    
-    // Set baud rate
+    options.c_cflag = CS8 | CLOCAL | CREAD;
+    options.c_iflag = IGNPAR;
+    options.c_oflag = 0;
+    options.c_lflag = 0;
+
+    // CRITICAL FIX: Set baud rate to 38400
     cfsetispeed(&options, B38400);
     cfsetospeed(&options, B38400);
-    
-    // Enable receiver and set local mode
-    options.c_cflag |= (CLOCAL | CREAD);
-    
-    // Set VMIN and VTIME for read behavior
-    options.c_cc[VMIN] = 0;   // Non-blocking read
-    options.c_cc[VTIME] = 1;  // 100ms timeout (in tenths of seconds)
-    
-    tcflush(fd_, TCIOFLUSH);
+
+    tcflush(fd_, TCIFLUSH);
     tcsetattr(fd_, TCSANOW, &options);
+
+    // Set the file descriptor to non-blocking mode
+    fcntl(fd_, F_SETFL, O_NONBLOCK);
   }
 
   int fd_ = -1;

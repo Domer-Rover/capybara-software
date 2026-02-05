@@ -26,7 +26,6 @@ CallbackReturn RoboClawHardwareInterface::on_init(const HardwareInfo & hardware_
   std::string serial_port;
   try {
     serial_port = hardware_info.hardware_parameters.at("serial_port");
-    std::cout << "[RoboClawHardwareInterface] Using serial port: " << serial_port << std::endl;
   } catch (const std::out_of_range &) {
     std::cerr << "Serial port must be defined as a hardware parameters." << std::endl;
     return CallbackReturn::ERROR;
@@ -37,7 +36,6 @@ CallbackReturn RoboClawHardwareInterface::on_init(const HardwareInfo & hardware_
     // Read the serial port from hardware parameters
     auto device = std::make_shared<roboclaw_serial::SerialDevice>(serial_port);
     interface_ = std::make_shared<roboclaw_serial::Interface>(device);
-    std::cout << "[RoboClawHardwareInterface] Serial port opened successfully" << std::endl;
   } catch (const std::exception & e) {
     std::cerr << e.what() << std::endl;
     return CallbackReturn::FAILURE;
@@ -54,14 +52,10 @@ CallbackReturn RoboClawHardwareInterface::on_init(const HardwareInfo & hardware_
 
   // Initialize each roboclaw unit from validated configuration
   for (auto & [roboclaw_address, joints] : config) {
-    std::cout << "[RoboClawHardwareInterface] Initializing RoboClaw at address 0x" 
-              << std::hex << static_cast<int>(roboclaw_address) << std::dec << std::endl;
     roboclaw_units_.push_back(
       RoboClawUnit(interface_, roboclaw_address, joints["M1"], joints["M2"]));
   }
 
-  std::cout << "[RoboClawHardwareInterface] Initialized " << roboclaw_units_.size() 
-            << " RoboClaw unit(s)" << std::endl;
   return CallbackReturn::SUCCESS;
 }
 
@@ -122,12 +116,11 @@ RoboClawConfiguration RoboClawHardwareInterface::parse_roboclaw_configuration(
               ". Only velocity command interfaces are supported.");
     }
 
-    for (const auto & interface : joint.state_interfaces) {
-      if (interface.name != "position" && interface.name != "velocity") {
-        throw std::runtime_error(
-              "Invalid state interface '" + interface.name + "' for " + joint.name +
-              ". Only 'position' and 'velocity' state interfaces are supported.");
-      }
+    // We currently only support position state interfaces
+    if (joint.state_interfaces.size() != 1 || joint.state_interfaces[0].name != "position") {
+      throw std::runtime_error(
+              "Invalid state interface for " + joint.name +
+              ". Only position state interfaces are supported.");
     }
 
     // Capture and validate parameters
@@ -147,11 +140,6 @@ RoboClawConfiguration RoboClawHardwareInterface::parse_roboclaw_configuration(
     }
 
     // Get the tick count per wheel rotation value
-    // TODO: Verify qppr (Quadrature Pulses Per Revolution) matches your actual encoder!
-    //       - Check your encoder datasheet for CPR (Counts Per Revolution)
-    //       - For quadrature encoders: qppr = CPR * 4 (due to quadrature decoding)
-    //       - Wrong qppr causes incorrect velocity scaling and erratic motor behavior
-    //       - Common values: 360, 1440, 2048, 4096 for various encoders
     int qppr;
     try {
       qppr = stoi(joint.parameters.at("qppr"));

@@ -40,15 +40,16 @@ diff_drive_controller:
 
     # ==================== VELOCITY/ACCELERATION LIMITS ====================
     # Adjust based on your robot's capabilities
+    # Reduced for gentle, controllable movement during testing
     linear.x.has_velocity_limits: true
-    linear.x.max_velocity: 0.5   # m/s (conservative for testing)
-    linear.x.min_velocity: -0.5
+    linear.x.max_velocity: 0.2   # m/s (reduced from 0.5 for smoother testing)
+    linear.x.min_velocity: -0.2
     linear.x.has_acceleration_limits: true
-    linear.x.max_acceleration: 0.5  # m/s^2
-    
+    linear.x.max_acceleration: 0.2  # m/s^2 (gentle ramp-up, ~1 sec to max)
+
     angular.z.has_velocity_limits: true
-    angular.z.max_velocity: 1.0  # rad/s
-    angular.z.min_velocity: -1.0
+    angular.z.max_velocity: 1.5  # rad/s (increased for responsive tank turns)
+    angular.z.min_velocity: -1.5
     angular.z.has_acceleration_limits: true
     angular.z.max_acceleration: 1.0  # rad/s^2
 
