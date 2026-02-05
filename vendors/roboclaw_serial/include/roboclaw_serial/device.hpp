@@ -82,7 +82,7 @@ public:
 
     /* Initialize the timeout data structure. */
     timeout.tv_sec = 0;
-    timeout.tv_usec = 10000;  // 10ms
+    timeout.tv_usec = 50000;  // 50ms (increased from 10ms for reliable RoboClaw comms)
 
     /* select returns 0 if timeout, 1 if input available, -1 if error. */
     int res = select(FD_SETSIZE, &set, NULL, NULL, &timeout);

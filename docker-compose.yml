@@ -3,7 +3,7 @@ services:
   ros-dev:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     container_name: gerbil-dev
     ports:
       - "6080:80"
@@ -21,7 +21,7 @@ services:
   ros-jetson:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.jetson
+      dockerfile: docker/Dockerfile.jetson
     container_name: gerbil-jetson
     network_mode: host
     privileged: true
