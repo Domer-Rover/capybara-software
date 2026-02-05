@@ -74,31 +74,39 @@ public:
 
   virtual std::size_t read(std::byte * buffer, std::size_t count)
   {
-    fd_set set;
-    struct timeval timeout;
+    std::size_t total_read = 0;
+    
+    while (total_read < count) {
+      fd_set set;
+      struct timeval timeout;
 
-    /* Initialize the file descriptor set. */
-    FD_ZERO(&set);
-    FD_SET(fd_, &set);
+      /* Initialize the file descriptor set. */
+      FD_ZERO(&set);
+      FD_SET(fd_, &set);
 
-    /* Initialize the timeout data structure. */
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 100000;  // 100ms (increased for reliable RoboClaw comms)
+      /* Initialize the timeout data structure. */
+      timeout.tv_sec = 0;
+      timeout.tv_usec = 100000;  // 100ms timeout per chunk
 
-    /* select returns 0 if timeout, 1 if input available, -1 if error. */
-    int res = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
-    if (res < 0) {
-      throw std::range_error("Error reading from the serial device!");
-    } else if (res == 0) {
-      throw std::runtime_error("Read timeout!");
+      /* select returns 0 if timeout, 1 if input available, -1 if error. */
+      int res = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
+      if (res < 0) {
+        throw std::range_error("Error reading from the serial device!");
+      } else if (res == 0) {
+        throw std::runtime_error("Read timeout!");
+      }
+      
+      ssize_t result = ::read(fd_, buffer + total_read, count - total_read);
+      if (result < 0) {
+        throw std::range_error("Error reading from the serial device!");
+      } else if (result == 0) {
+        throw std::runtime_error("Read timeout!");
+      }
+      
+      total_read += static_cast<std::size_t>(result);
     }
-    ssize_t result = ::read(fd_, buffer, count);
-    if (result < 0) {
-      // Error reading from the device
-      throw std::range_error("Error reading from the serial device!");
-    }
 
-    return static_cast<std::size_t>(result);
+    return total_read;
   }
 
 protected:
