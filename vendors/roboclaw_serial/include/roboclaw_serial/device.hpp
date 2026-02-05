@@ -108,6 +108,11 @@ private:
   {
     struct termios options;
     tcgetattr(fd_, &options);
+    
+    // Set baud rate to 38400 (RoboClaw default)
+    cfsetispeed(&options, B38400);
+    cfsetospeed(&options, B38400);
+    
     options.c_cflag = CS8 | CLOCAL | CREAD;
     options.c_iflag = IGNPAR;
     options.c_oflag = 0;
