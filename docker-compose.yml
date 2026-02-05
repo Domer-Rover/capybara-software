@@ -1,10 +1,9 @@
 services:
-  # Development container with VNC (personal device development use) 
+  # Development container with VNC (Mac/Windows/Jetson)
   ros-dev:
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
-      network: host  # Use host network during build to avoid iptables issues on macOS
     container_name: gerbil-dev
     ports:
       - "6080:80"
@@ -13,24 +12,25 @@ services:
       - seccomp:unconfined
     volumes:
       - .:/home/ubuntu/ros2_ws/src/gerbil-software
-    # Uncomment to use ZED2i (only use zed2i on dev, because it uses usb connection, which most laptops have)
     # devices:
-    #   - /dev/video0:/dev/video0
+    #   - /dev/ttyTHS1:/dev/ttyTHS1  # RoboClaw (only exists on Jetson, ignored on Mac)
+    #   - /dev/video0:/dev/video0    # ZED2i (only exists on Jetson, ignored on Mac)
+    #   - /dev/i2c-1:/dev/i2c-1      # IMU (only exists on Jetson, ignored on Mac)
     command: /bin/bash -c "supervisord -c /etc/supervisor/supervisord.conf"
 
-  # Headless container for Jetson
+  # Headless container (Jetson only)
   ros-jetson:
     build:
       context: .
       dockerfile: docker/Dockerfile.jetson
-      network: host  # Use host network during build to avoid iptables issues on macOS
     container_name: gerbil-jetson
     network_mode: host
     privileged: true
+    shm_size: '512m'
     volumes:
-      - .:/root/ros2_ws/src/gerbil-software
+      - .:/home/ubuntu/ros2_ws/src/gerbil-software
     devices:
-      - /dev/ttyTHS1:/dev/ttyTHS1  # RoboClaw motor controller
-      - /dev/video0:/dev/video0    # ZED2i camera
-      - /dev/i2c-1:/dev/i2c-1      # IMU (using I2C)
+      - /dev/ttyTHS1:/dev/ttyTHS1
+      - /dev/video0:/dev/video0
+      - /dev/i2c-1:/dev/i2c-1
     command: /bin/bash -c "tail -f /dev/null"
