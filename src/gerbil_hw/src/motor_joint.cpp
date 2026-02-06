@@ -17,14 +17,25 @@
 namespace roboclaw_hardware_interface
 {
 
-MotorJoint::MotorJoint(const std::string joint_name, const int32_t qppr)
-: ticks_per_radian_(static_cast<double>(qppr) * 0.5 * M_1_PI), name(joint_name)
+MotorJoint::MotorJoint(const std::string joint_name, const int32_t qppr, const double max_duty_speed)
+: ticks_per_radian_(static_cast<double>(qppr) * 0.5 * M_1_PI),
+  duty_per_rad_s_(32767.0 / max_duty_speed),
+  name(joint_name)
 {
 }
 
 int32_t MotorJoint::getTickRateCommand() const
 {
   return static_cast<int32_t>(velocity_command_ * ticks_per_radian_);
+}
+
+int16_t MotorJoint::getDutyCycleCommand() const
+{
+  double duty = velocity_command_ * duty_per_rad_s_;
+  // Clamp to valid duty cycle range
+  if (duty > 32767.0) duty = 32767.0;
+  if (duty < -32767.0) duty = -32767.0;
+  return static_cast<int16_t>(duty);
 }
 
 double MotorJoint::getVelocityCommand() const

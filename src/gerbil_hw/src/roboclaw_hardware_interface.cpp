@@ -41,6 +41,16 @@ CallbackReturn RoboClawHardwareInterface::on_init(const HardwareInfo & hardware_
     return CallbackReturn::FAILURE;
   }
 
+  // Check for duty cycle mode (use when encoders are not wired)
+  bool use_duty_cycle = false;
+  auto duty_it = hardware_info.hardware_parameters.find("use_duty_cycle");
+  if (duty_it != hardware_info.hardware_parameters.end()) {
+    use_duty_cycle = (duty_it->second == "true" || duty_it->second == "1");
+  }
+  if (use_duty_cycle) {
+    std::cerr << "[RoboClawHW] Duty cycle mode enabled (no encoders required)" << std::endl;
+  }
+
   // Validate parameters describing roboclaw joint configurations
   RoboClawConfiguration config;
   try {
@@ -53,7 +63,7 @@ CallbackReturn RoboClawHardwareInterface::on_init(const HardwareInfo & hardware_
   // Initialize each roboclaw unit from validated configuration
   for (auto & [roboclaw_address, joints] : config) {
     roboclaw_units_.push_back(
-      RoboClawUnit(interface_, roboclaw_address, joints["M1"], joints["M2"]));
+      RoboClawUnit(interface_, roboclaw_address, joints["M1"], joints["M2"], use_duty_cycle));
   }
 
   return CallbackReturn::SUCCESS;
@@ -170,11 +180,18 @@ RoboClawConfiguration RoboClawHardwareInterface::parse_roboclaw_configuration(
       roboclaw_address,
       std::map<std::string, MotorJoint::SharedPtr>({{"M1", nullptr}, {"M2", nullptr}}));
 
+    // Get max_duty_speed (rad/s that maps to full duty cycle), default 20.0
+    double max_duty_speed = 20.0;
+    auto mds_it = joint.parameters.find("max_duty_speed");
+    if (mds_it != joint.parameters.end()) {
+      max_duty_speed = std::stod(mds_it->second);
+    }
+
     // Ensure that this motor has not already been configured
     if (!roboclaw_config[roboclaw_address][motor_type]) {
       // Set configuration parameters for this motor
       roboclaw_config[roboclaw_address][motor_type] =
-        std::make_shared<MotorJoint>(joint.name, qppr);
+        std::make_shared<MotorJoint>(joint.name, qppr, max_duty_speed);
     } else {
       throw std::runtime_error(
               "Bad motor type " + motor_type + " specified for joint " + joint.name);

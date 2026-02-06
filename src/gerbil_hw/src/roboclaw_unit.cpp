@@ -28,8 +28,8 @@ namespace roboclaw_hardware_interface
 
 RoboClawUnit::RoboClawUnit(
   roboclaw_serial::Interface::SharedPtr interface, uint8_t address, MotorJoint::SharedPtr m1,
-  MotorJoint::SharedPtr m2)
-: address_(address)
+  MotorJoint::SharedPtr m2, bool use_duty_cycle)
+: address_(address), use_duty_cycle_(use_duty_cycle)
 {
   // Copy the pointer to the roboclaw interface
   interface_ = interface;
@@ -37,6 +37,10 @@ RoboClawUnit::RoboClawUnit(
   // Set motor joint configurations
   joints[0] = m1;
   joints[1] = m2;
+
+  if (use_duty_cycle_) {
+    std::cerr << "[RoboClawUnit] Using duty cycle mode (no encoders required)" << std::endl;
+  }
 }
 
 // Read the encoder counts from the roboclaw and update position state
@@ -66,24 +70,31 @@ void RoboClawUnit::read()
   }
 }
 
-// Write the tick rate request to the roboclaw and update
+// Write the motor command to the roboclaw
 void RoboClawUnit::write()
 {
-  // Get references to fields in the tick rate command message
-  auto & [m1_speed, m2_speed] = tick_rate_command_.fields;
-
-  // Set values to each field if the corresponding joint exists
-  // Use the properly calculated tick rate from the motor joint
-  if (joints[0]) {
-    m1_speed = joints[0]->getTickRateCommand();
-  }
-  if (joints[1]) {
-    m2_speed = joints[1]->getTickRateCommand();
-  }
-
-  // Write the speed command to the roboclaw driver
   try {
-    interface_->write(tick_rate_command_, address_);
+    if (use_duty_cycle_) {
+      // Duty cycle mode: no encoders needed
+      auto & [m1_duty, m2_duty] = duty_command_.fields;
+      if (joints[0]) {
+        m1_duty = joints[0]->getDutyCycleCommand();
+      }
+      if (joints[1]) {
+        m2_duty = joints[1]->getDutyCycleCommand();
+      }
+      interface_->write(duty_command_, address_);
+    } else {
+      // Velocity PID mode: requires encoders
+      auto & [m1_speed, m2_speed] = tick_rate_command_.fields;
+      if (joints[0]) {
+        m1_speed = joints[0]->getTickRateCommand();
+      }
+      if (joints[1]) {
+        m2_speed = joints[1]->getTickRateCommand();
+      }
+      interface_->write(tick_rate_command_, address_);
+    }
   } catch (const std::exception & e) {
     static auto last_log = std::chrono::steady_clock::now();
     auto now = std::chrono::steady_clock::now();

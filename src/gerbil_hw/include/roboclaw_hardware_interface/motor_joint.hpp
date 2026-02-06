@@ -26,8 +26,11 @@ namespace roboclaw_hardware_interface
 class MotorJoint
 {
 private:
-  // The radians of rotation per tick
+  // The radians of rotation per tick (used in encoder/velocity PID mode)
   const double ticks_per_radian_;
+
+  // Duty cycle units per radian/sec (used in duty cycle mode)
+  const double duty_per_rad_s_;
 
   // Desired velocity of the wheel in radians per second
   double velocity_command_ = 0;
@@ -46,13 +49,16 @@ public:
   const std::string name;
 
   // Constructor
-  MotorJoint(const std::string joint_name, const int32_t qppr);
+  MotorJoint(const std::string joint_name, const int32_t qppr, const double max_duty_speed = 20.0);
 
-  // Return the tick rate required to execute the current velocity command
+  // Return the tick rate required to execute the current velocity command (encoder mode)
   int32_t getTickRateCommand() const;
- 
-    // Return the current velocity command (rad/s)
-    double getVelocityCommand() const;
+
+  // Return the duty cycle command (-32767 to 32767) for the current velocity (no encoders needed)
+  int16_t getDutyCycleCommand() const;
+
+  // Return the current velocity command (rad/s)
+  double getVelocityCommand() const;
 
   // Set the position given the current wheel encoder count
   void setPositionState(const int32_t & encoder_count);
