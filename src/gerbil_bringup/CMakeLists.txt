@@ -12,8 +12,13 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 install(
-  DIRECTORY launch config
+  DIRECTORY launch config maps
   DESTINATION share/${PROJECT_NAME}/
+)
+
+install(
+  PROGRAMS scripts/aruco_detector.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()
