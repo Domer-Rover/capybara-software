@@ -1,3 +1,5 @@
+# NO LONGER IN USE, REPLACED WITH LIDAR, BUT STILL USED ON GERBIL FOR TESTING
+
 depthimage_to_laserscan_node:
   ros__parameters:
     # Height of the scan line in the depth image (pixels from center)

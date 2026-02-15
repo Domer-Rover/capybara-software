@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# NO LONGER IN USE, REPLACED WITH LIDAR, BUT STILL USED ON GERBIL FOR TESTING
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import AnyLaunchDescriptionSource
