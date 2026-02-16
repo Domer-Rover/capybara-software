@@ -25,8 +25,8 @@ cd <package>
 git checkout <commit-or-tag>
 rm -rf .git*
 
-cp -r /tmp/<package> /path/to/gerbil-software/src/vendors/
-cd /path/to/gerbil-software
+cp -r /tmp/<package> /path/to/capybara-software/src/vendors/
+cd /path/to/capybara-software
 colcon build --packages-select <package>
 
 git add src/vendors/<package>

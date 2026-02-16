@@ -179,7 +179,7 @@ diffbot_base_controller:
 ## Example
 
 This repo includes a minimal bringup example for a 2-wheel + caster robot:
-- Robot description: `urdf/gerbil_robot.urdf`
+- Robot description: `urdf/capybara.urdf.xacro`
 - Controller config: `config/controller_manager.yaml`
 - Launch: `launch/bringup.launch.py`
 
