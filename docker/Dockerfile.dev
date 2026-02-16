@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y \
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
     ros-humble-teleop-twist-keyboard \
+    ros-humble-slam-toolbox \
+    ros-humble-sllidar-ros2 \
     ros-humble-turtlebot3* \
     libserial-dev \
     && rm -rf /var/lib/apt/lists/*

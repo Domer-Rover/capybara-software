@@ -19,7 +19,7 @@ Jetson (Headless)  ◄──WiFi/LAN──►  Dev Machine
 ### Jetson Setup
 ```bash
 docker-compose up ros-jetson
-docker exec -it gerbil-jetson bash
+docker exec -it capybara-jetson bash
 
 export ROS_DOMAIN_ID=42
 source /opt/ros/humble/setup.bash
