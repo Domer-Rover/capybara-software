@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(gerbil_hw)
+project(capybara_hw)
 
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -20,7 +20,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(roboclaw_serial REQUIRED)
 
-pluginlib_export_plugin_description_file(hardware_interface gerbil_hw.xml)
+pluginlib_export_plugin_description_file(hardware_interface capybara_hw.xml)
 
 # Include directories
 include_directories(
@@ -53,7 +53,7 @@ install(TARGETS ${PROJECT_NAME}
 
 # Install the plugin description xml file
 install(FILES
-  gerbil_hw.xml
+  capybara_hw.xml
   DESTINATION share/${PROJECT_NAME}
 )
 

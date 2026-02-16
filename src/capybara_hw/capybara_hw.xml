@@ -1,5 +1,5 @@
-<library path="gerbil_hw">
-  <class name="gerbil_hw/RoboClawHardwareInterface"
+<library path="capybara_hw">
+  <class name="capybara_hw/RoboClawHardwareInterface"
          type="roboclaw_hardware_interface::RoboClawHardwareInterface"
          base_class_type="hardware_interface::SystemInterface">
     <description>

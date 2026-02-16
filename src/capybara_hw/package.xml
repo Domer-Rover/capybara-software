@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>gerbil_hw</name>
+  <name>capybara_hw</name>
   <version>0.0.0</version>
   <description>BasicMicro RoboClaw hardware interface</description>
   <maintainer email="contact@ericcox.me">Eric Cox</maintainer>
@@ -20,6 +20,6 @@
 
   <export>
     <build_type>ament_cmake</build_type>
-    <pluginlib prefix="${prefix}/gerbil_hw.xml"/>
+    <pluginlib prefix="${prefix}/capybara_hw.xml"/>
   </export>
 </package>
