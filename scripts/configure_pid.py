@@ -78,6 +78,6 @@ with Basicmicro(PORT, BAUDRATE) as controller:
     print("✅ PID Configuration Complete!")
     print("="*50)
     print("\nYou can now test with ROS:")
-    print("  ros2 launch gerbil_bringup gerbil.launch.xml use_mock_hardware:=false")
+    print("  ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=false")
     print("\nTo verify, run:")
     print("  python3 scripts/check_pid.py")
