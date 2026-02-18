@@ -4,7 +4,7 @@
     <!-- Hardware mode - mock for simulation, real for actual RoboClaw -->
     <xacro:arg name="use_mock_hardware" default="true" />
 
-    <ros2_control name="GerbilRoboClawSystem" type="system">
+    <ros2_control name="CapybaraRoboClawSystem" type="system">
         <!-- Mock hardware for simulation or testing without actual RoboClaw -->
         <xacro:if value="$(arg use_mock_hardware)">
             <hardware>
@@ -15,16 +15,15 @@
         <!-- Real RoboClaw hardware (use when SSH'd into Jetson) -->
         <xacro:unless value="$(arg use_mock_hardware)">
             <hardware>
-                <plugin>gerbil_hw/RoboClawHardwareInterface</plugin>
-                <param name="serial_port">/dev/ttyTHS1</param>
+                <plugin>capybara_hw/RoboClawHardwareInterface</plugin>
+                <param name="serial_port">/dev/ttyTHS2</param>
                 <!-- Duty cycle mode - bypasses velocity PID, no encoders needed -->
-                <!-- Set to false once encoders are wired up -->
                 <param name="use_duty_cycle">true</param>
             </hardware>
         </xacro:unless>
 
-        <!-- joints that are defined and do not change whether using mock hardware or actual roboclaw hardware -->
-        <joint name="base_left_wheel_joint">
+        <!-- ==================== RoboClaw 128 (top): rear_right M1, front_left M2 ==================== -->
+        <joint name="front_left_wheel_joint">
             <command_interface name="velocity">
                 <param name="min">-10.0</param>
                 <param name="max">10.0</param>
@@ -33,10 +32,9 @@
             <param name="address">128</param>
             <param name="qppr">500</param>
             <param name="motor_type">M2</param>
-            <!-- Motor speed (rad/s) that maps to 100 percent duty cycle. Lower = more responsive -->
             <param name="max_duty_speed">10.0</param>
         </joint>
-        <joint name="base_right_wheel_joint">
+        <joint name="rear_right_wheel_joint">
             <command_interface name="velocity">
                 <param name="min">-10.0</param>
                 <param name="max">10.0</param>
@@ -45,7 +43,54 @@
             <param name="address">128</param>
             <param name="qppr">500</param>
             <param name="motor_type">M1</param>
-            <!-- Motor speed (rad/s) that maps to 100 percent duty cycle. Lower = more responsive -->
+            <param name="max_duty_speed">10.0</param>
+        </joint>
+
+        <!-- ==================== RoboClaw 129 (middle): mid_right M1, mid_left M2 ==================== -->
+        <joint name="mid_left_wheel_joint">
+            <command_interface name="velocity">
+                <param name="min">-10.0</param>
+                <param name="max">10.0</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <param name="address">129</param>
+            <param name="qppr">500</param>
+            <param name="motor_type">M2</param>
+            <param name="max_duty_speed">10.0</param>
+        </joint>
+        <joint name="mid_right_wheel_joint">
+            <command_interface name="velocity">
+                <param name="min">-10.0</param>
+                <param name="max">10.0</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <param name="address">129</param>
+            <param name="qppr">500</param>
+            <param name="motor_type">M1</param>
+            <param name="max_duty_speed">10.0</param>
+        </joint>
+
+        <!-- ==================== RoboClaw 130 (bottom): front_right M1, rear_left M2 ==================== -->
+        <joint name="rear_left_wheel_joint">
+            <command_interface name="velocity">
+                <param name="min">-10.0</param>
+                <param name="max">10.0</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <param name="address">130</param>
+            <param name="qppr">500</param>
+            <param name="motor_type">M2</param>
+            <param name="max_duty_speed">10.0</param>
+        </joint>
+        <joint name="front_right_wheel_joint">
+            <command_interface name="velocity">
+                <param name="min">-10.0</param>
+                <param name="max">10.0</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <param name="address">130</param>
+            <param name="qppr">500</param>
+            <param name="motor_type">M1</param>
             <param name="max_duty_speed">10.0</param>
         </joint>
     </ros2_control>

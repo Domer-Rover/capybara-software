@@ -2,20 +2,35 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- ROBOT DIMENSIONS -->
-    <!-- Drive wheels and ZED camera are at the front (+X) -->
-    <!-- Caster wheel is at the rear (-X) -->
-    <xacro:property name="base_length" value="0.6096" />      <!-- 24 inches -->
-    <xacro:property name="base_width" value="0.3048" />       <!-- 12 inches -->
-    <xacro:property name="base_height" value="0.0635" />      <!-- 2.5 inches -->
-    <xacro:property name="base_mass" value="6.8" />           <!-- ~15 lbs -->
+    <!-- TODO measure and update these values for the 6WD chassis -->
+    <xacro:property name="base_length" value="0.6096" />      <!-- 24 inches - UPDATE -->
+    <xacro:property name="base_width" value="0.3048" />       <!-- 12 inches - UPDATE -->
+    <xacro:property name="base_height" value="0.0635" />      <!-- 2.5 inches - UPDATE -->
+    <xacro:property name="base_mass" value="6.8" />           <!-- ~15 lbs - UPDATE -->
 
-    <xacro:property name="wheel_radius" value="0.04756" />    <!-- 95.11mm diameter -->
-    <xacro:property name="wheel_length" value="0.03195" />    <!-- 31.95mm width -->
-    <xacro:property name="wheel_mass" value="0.5" />          <!-- kg estimate -->
-    <xacro:property name="wheel_separation" value="0.42285" /> <!-- 422.85mm center-to-center -->
+    <!-- TODO measure wheel dimensions for 6WD chassis -->
+    <xacro:property name="wheel_radius" value="0.04756" />    <!-- UPDATE after measuring -->
+    <xacro:property name="wheel_length" value="0.03195" />    <!-- UPDATE after measuring -->
+    <xacro:property name="wheel_mass" value="0.5" />
 
-    <!-- Wheel X position - near front edge of chassis -->
-    <xacro:property name="wheel_x_offset" value="${base_length / 2.0 - 0.06}" />
+    <!-- Track widths - front/mid share one width, rear is wider -->
+    <!-- TODO measure both track widths -->
+    <xacro:property name="wheel_separation" value="0.42285" />       <!-- front+mid track width -->
+    <xacro:property name="rear_wheel_separation" value="0.48" />     <!-- rear track width - UPDATE -->
+
+    <!-- Axle X positions relative to base_link center -->
+    <!-- TODO measure axle spacing for 6WD chassis -->
+    <xacro:property name="front_axle_x" value="${base_length / 2.0 - 0.06}" />
+    <xacro:property name="mid_axle_x" value="0.0" />
+    <xacro:property name="rear_axle_x" value="${-base_length / 2.0 + 0.06}" />
+
+    <!-- LIDAR pole height (from chassis top to LIDAR center) -->
+    <!-- TODO measure the actual pole height -->
+    <xacro:property name="lidar_pole_height" value="0.25" />
+
+    <!-- Antenna stick height (from chassis top) -->
+    <xacro:property name="antenna_height" value="0.40" />
+    <xacro:property name="antenna_spacing" value="0.10" />
 
     <!-- BASE FOOTPRINT -->
     <link name="base_footprint" />
@@ -74,32 +89,15 @@
         </link>
     </xacro:macro>
 
-    <xacro:wheel_link prefix="right" />
-    <xacro:wheel_link prefix="left" />
+    <!-- 6 WHEELS -->
+    <xacro:wheel_link prefix="front_left" />
+    <xacro:wheel_link prefix="front_right" />
+    <xacro:wheel_link prefix="mid_left" />
+    <xacro:wheel_link prefix="mid_right" />
+    <xacro:wheel_link prefix="rear_left" />
+    <xacro:wheel_link prefix="rear_right" />
 
-    <!-- CASTER WHEEL -->
-    <link name="caster_wheel_link">
-        <visual>
-            <geometry>
-                <sphere radius="${wheel_radius / 2.0}" />
-            </geometry>
-            <origin xyz="0 0 0" rpy="0 0 0" />
-            <material name="grey" />
-        </visual>
-        <collision>
-            <geometry>
-                <sphere radius="${wheel_radius / 2.0}" />
-            </geometry>
-            <origin xyz="0 0 0" rpy="0 0 0" />
-        </collision>
-        <inertial>
-            <mass value="0.2" />
-            <origin xyz="0 0 0" rpy="0 0 0" />
-            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
-        </inertial>
-    </link>
-
-    <!-- IMU LINK -->
+    <!-- IMU LINK (ZED2i internal IMU) -->
     <link name="imu_link">
         <visual>
             <geometry>
@@ -122,8 +120,6 @@
     </link>
 
     <!-- ZED2i CAMERA LINK -->
-    <!-- Named 'zed_camera_link' to match the ZED wrapper's TF frame,
-         connecting the robot URDF tree to the ZED's internal frame chain -->
     <link name="zed_camera_link">
         <visual>
             <geometry>
@@ -145,47 +141,143 @@
         </inertial>
     </link>
 
-    <!-- JOINTS -->
+    <!-- LIDAR POLE (visual only, for collision awareness) -->
+    <link name="lidar_pole_link">
+        <visual>
+            <geometry>
+                <cylinder radius="0.01" length="${lidar_pole_height}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="grey" />
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.01" length="${lidar_pole_height}" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+        </inertial>
+    </link>
+
+    <!-- LIDAR LINK (STL-19P) - on top of the pole -->
+    <link name="laser_frame">
+        <visual>
+            <geometry>
+                <cylinder radius="0.035" length="0.045" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="dark_grey">
+                <color rgba="0.2 0.2 0.2 1" />
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.035" length="0.045" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+        </inertial>
+    </link>
+
+    <!-- ANTENNA STICKS (rear of chassis, visual/collision only) -->
+    <xacro:macro name="antenna_link" params="prefix">
+        <link name="${prefix}_antenna_link">
+            <visual>
+                <geometry>
+                    <cylinder radius="0.005" length="${antenna_height}" />
+                </geometry>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <material name="grey" />
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder radius="0.005" length="${antenna_height}" />
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.05" />
+                <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+            </inertial>
+        </link>
+    </xacro:macro>
+
+    <xacro:antenna_link prefix="left" />
+    <xacro:antenna_link prefix="right" />
+
+    <!-- ==================== JOINTS ==================== -->
+
+    <!-- Base footprint to base link -->
     <joint name="base_joint" type="fixed">
         <parent link="base_footprint" />
         <child link="base_link" />
         <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
     </joint>
 
-    <!-- Drive wheels at rear but changed to front -->
-    <joint name="base_right_wheel_joint" type="continuous">
-        <parent link="base_link" />
-        <child link="right_wheel_link" />
-        <origin xyz="${wheel_x_offset} ${-wheel_separation / 2.0} 0" rpy="0 0 0" />
-        <axis xyz="0 1 0" />
-    </joint>
+    <!-- WHEEL JOINT MACRO (takes per-axle separation) -->
+    <xacro:macro name="wheel_joint" params="prefix x_pos y_offset">
+        <joint name="${prefix}_wheel_joint" type="continuous">
+            <parent link="base_link" />
+            <child link="${prefix}_wheel_link" />
+            <origin xyz="${x_pos} ${y_offset} 0" rpy="0 0 0" />
+            <axis xyz="0 1 0" />
+        </joint>
+    </xacro:macro>
 
-    <joint name="base_left_wheel_joint" type="continuous">
-        <parent link="base_link" />
-        <child link="left_wheel_link" />
-        <origin xyz="${wheel_x_offset} ${wheel_separation / 2.0} 0" rpy="0 0 0" />
-        <axis xyz="0 1 0" />
-    </joint>
+    <!-- Front axle (standard width) -->
+    <xacro:wheel_joint prefix="front_left" x_pos="${front_axle_x}" y_offset="${wheel_separation / 2.0}" />
+    <xacro:wheel_joint prefix="front_right" x_pos="${front_axle_x}" y_offset="${-wheel_separation / 2.0}" />
 
-    <!-- Caster at the front, but we consider it rear -->
-    <joint name="base_caster_wheel_joint" type="fixed">
-        <parent link="base_link" />
-        <child link="caster_wheel_link" />
-        <origin xyz="${-wheel_x_offset} 0 ${-wheel_radius / 2.0}" rpy="0 0 0" />
-    </joint>
+    <!-- Middle axle (standard width) -->
+    <xacro:wheel_joint prefix="mid_left" x_pos="${mid_axle_x}" y_offset="${wheel_separation / 2.0}" />
+    <xacro:wheel_joint prefix="mid_right" x_pos="${mid_axle_x}" y_offset="${-wheel_separation / 2.0}" />
 
-    <!-- IMU centered on top of chassis not quite right, doesn't really matter, can add meshes later -->
+    <!-- Rear axle (wider) -->
+    <xacro:wheel_joint prefix="rear_left" x_pos="${rear_axle_x}" y_offset="${rear_wheel_separation / 2.0}" />
+    <xacro:wheel_joint prefix="rear_right" x_pos="${rear_axle_x}" y_offset="${-rear_wheel_separation / 2.0}" />
+
+    <!-- IMU centered on top of chassis -->
     <joint name="imu_joint" type="fixed">
         <parent link="base_link" />
         <child link="imu_link" />
         <origin xyz="0 0 ${base_height + 0.005}" rpy="0 0 0" />
     </joint>
 
-    <!-- ZED camera at front edge, on top of chassis, facing forward (rear) -->
+    <!-- ZED camera at front edge, on top of chassis, facing forward -->
     <joint name="camera_joint" type="fixed">
         <parent link="base_link" />
         <child link="zed_camera_link" />
         <origin xyz="${base_length / 2.0 - 0.02} 0 ${base_height + 0.015}" rpy="0 0 0" />
+    </joint>
+
+    <!-- LIDAR pole mounted center of chassis -->
+    <joint name="lidar_pole_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="lidar_pole_link" />
+        <origin xyz="0 0 ${base_height + lidar_pole_height / 2.0}" rpy="0 0 0" />
+    </joint>
+
+    <!-- LIDAR on top of pole -->
+    <joint name="lidar_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="laser_frame" />
+        <origin xyz="0 0 ${base_height + lidar_pole_height + 0.023}" rpy="0 0 0" />
+    </joint>
+
+    <!-- Antenna sticks at rear of chassis -->
+    <joint name="left_antenna_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="left_antenna_link" />
+        <origin xyz="${rear_axle_x} ${antenna_spacing / 2.0} ${base_height + antenna_height / 2.0}" rpy="0 0 0" />
+    </joint>
+
+    <joint name="right_antenna_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="right_antenna_link" />
+        <origin xyz="${rear_axle_x} ${-antenna_spacing / 2.0} ${base_height + antenna_height / 2.0}" rpy="0 0 0" />
     </joint>
 
 </robot>
