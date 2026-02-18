@@ -3,12 +3,13 @@
     <arg name="use_mock_hardware" default="true" />
     <arg name="launch_rviz" default="true" />
     <arg name="launch_zed" default="true" />
+    <arg name="launch_lidar" default="true" />
 
     <!-- ==================== PATHS ==================== -->
     <let name="urdf_path"
-         value="$(find-pkg-share gerbil_description)/urdf/gerbil.urdf.xacro" />
+         value="$(find-pkg-share capybara_description)/urdf/capybara.urdf.xacro" />
     <let name="rviz_config_path"
-         value="$(find-pkg-share gerbil_description)/rviz/urdf_config.rviz" />
+         value="$(find-pkg-share capybara_description)/rviz/urdf_config.rviz" />
 
     <!-- ==================== ROBOT STATE PUBLISHER ==================== -->
     <node pkg="robot_state_publisher" exec="robot_state_publisher">
@@ -20,7 +21,7 @@
     <node pkg="controller_manager" exec="ros2_control_node" output="screen">
         <param name="robot_description"
                value="$(command 'xacro $(var urdf_path) use_mock_hardware:=$(var use_mock_hardware)')" />
-        <param from="$(find-pkg-share gerbil_bringup)/config/gerbil_controllers.yaml" />
+        <param from="$(find-pkg-share capybara_bringup)/config/capybara_controllers.yaml" />
     </node>
 
     <!-- Spawners for controllers -->
@@ -35,6 +36,16 @@
             <arg name="publish_tf" value="true" />
             <arg name="publish_map_tf" value="false" />
         </include>
+    </group>
+
+    <!-- ==================== LIDAR (STL-19P) ==================== -->
+    <group if="$(var launch_lidar)">
+        <node pkg="sllidar_ros2" exec="sllidar_node" name="sllidar_node" output="screen">
+            <param name="serial_port" value="/dev/ttyUSB0" />
+            <param name="serial_baudrate" value="115200" />
+            <param name="frame_id" value="laser_frame" />
+            <param name="scan_mode" value="Standard" />
+        </node>
     </group>
 
     <!-- ==================== RVIZ ==================== -->

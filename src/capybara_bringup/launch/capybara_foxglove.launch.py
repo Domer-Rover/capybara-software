@@ -27,14 +27,14 @@ def generate_launch_description():
         description='Foxglove WebSocket port'
     )
 
-    gerbil_bringup_share = FindPackageShare('gerbil_bringup')
+    capybara_bringup_share = FindPackageShare('capybara_bringup')
 
-    gerbil_launch = IncludeLaunchDescription(
+    capybara_launch = IncludeLaunchDescription(
         AnyLaunchDescriptionSource([
             PathJoinSubstitution([
-                gerbil_bringup_share,
+                capybara_bringup_share,
                 'launch',
-                'gerbil.launch.xml'
+                'capybara.launch.xml'
             ])
         ]),
         launch_arguments={
@@ -60,7 +60,7 @@ def generate_launch_description():
 
     # ArUco marker detection (OpenCV, DICT_6X6_250)
     aruco_detector = Node(
-        package='gerbil_bringup',
+        package='capybara_bringup',
         executable='aruco_detector.py',
         name='aruco_detector',
         output='screen',
@@ -75,7 +75,7 @@ def generate_launch_description():
         use_mock_hardware_arg,
         launch_zed_arg,
         foxglove_port_arg,
-        gerbil_launch,
+        capybara_launch,
         foxglove_bridge,
         aruco_detector,
     ])

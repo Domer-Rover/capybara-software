@@ -16,28 +16,23 @@ slam_toolbox:
     use_map_saver: true
     mode: mapping
 
-    # Process near changes only (good for slow robots)
-    map_update_interval: 3.0          # update map more frequently
+    # Map update settings (tuned for real 360-degree LIDAR)
+    map_update_interval: 5.0
     resolution: 0.05
-    max_laser_range: 5.0               # ZED depth is unreliable past ~5m
+    max_laser_range: 12.0             # STL-19P range ~12m
     minimum_time_interval: 0.5
-    transform_timeout: 0.5             # more tolerance for ZED VO latency
+    transform_timeout: 0.2
     tf_buffer_duration: 30.0
 
-    # Map size constraints (metres) — ~5yd x 5yd space + margin
-    # Map will be centred on the robot's start position
-    map_size_x: 8.0
-    map_size_y: 8.0
-
-    # Throttle (Jetson Nano friendly)
+    # Throttle (Jetson friendly)
     throttle_scans: 1
     enable_interactive_mode: true
 
-    # Correlation search (how far to search for loop closures)
+    # Scan matching - with 360 LIDAR we get full coverage per scan
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.15      # denser scans for narrow FOV depth camera
-    minimum_travel_heading: 0.2        # capture more heading changes with limited FOV
+    minimum_travel_distance: 0.5      # full 360 coverage means fewer scans needed
+    minimum_travel_heading: 0.5
 
     # Correlation search parameters
     correlation_search_space_dimension: 0.5
@@ -45,7 +40,7 @@ slam_toolbox:
     correlation_search_space_smear_deviation: 0.1
 
     # Loop closure parameters
-    loop_search_space_dimension: 4.0   # smaller search = fewer false loop closures
+    loop_search_space_dimension: 8.0
     loop_search_space_resolution: 0.05
     loop_search_space_smear_deviation: 0.03
     loop_search_maximum_variance_coarse: 3.0

@@ -6,7 +6,7 @@ No SLAM map, no AMCL localization. Just send a goal relative to
 where the robot started (odom origin).
 
 Usage:
-  ros2 launch gerbil_bringup gerbil_nav2_simple.launch.py use_mock_hardware:=false
+  ros2 launch capybara_bringup capybara_nav2_simple.launch.py use_mock_hardware:=false
 
 Then send a goal (e.g. 2m forward) in Foxglove on /goal_pose (frame: odom),
 or from CLI:
@@ -35,17 +35,17 @@ def generate_launch_description():
         description='Foxglove WebSocket port'
     )
 
-    gerbil_bringup_share = FindPackageShare('gerbil_bringup')
+    capybara_bringup_share = FindPackageShare('capybara_bringup')
 
     nav2_params = PathJoinSubstitution([
-        gerbil_bringup_share, 'config', 'nav2_odom_only_params.yaml'
+        capybara_bringup_share, 'config', 'nav2_odom_only_params.yaml'
     ])
 
     # Base robot launch (controllers, ZED, robot_state_publisher)
-    gerbil_launch = IncludeLaunchDescription(
+    capybara_launch = IncludeLaunchDescription(
         AnyLaunchDescriptionSource([
             PathJoinSubstitution([
-                gerbil_bringup_share, 'launch', 'gerbil.launch.xml'
+                capybara_bringup_share, 'launch', 'capybara.launch.xml'
             ])
         ]),
         launch_arguments={
@@ -70,25 +70,8 @@ def generate_launch_description():
         output='screen'
     )
 
-    # Convert ZED depth image to 2D laser scan for costmaps
-    depthimage_to_laserscan = Node(
-        package='depthimage_to_laserscan',
-        executable='depthimage_to_laserscan_node',
-        name='depthimage_to_laserscan_node',
-        parameters=[
-            PathJoinSubstitution([
-                gerbil_bringup_share, 'config', 'depthimage_to_laserscan.yaml'
-            ])
-        ],
-        remappings=[
-            ('depth', '/zed/zed_node/depth/depth_registered'),
-            ('depth_camera_info', '/zed/zed_node/depth/camera_info'),
-            ('scan', '/scan'),
-        ],
-        output='screen'
-    )
-
     # --- Nav2 (odom-only, no map/AMCL) ---
+    # /scan is provided by LIDAR in capybara.launch.xml
 
     controller_server = Node(
         package='nav2_controller',
@@ -142,7 +125,7 @@ def generate_launch_description():
 
     # ArUco marker detection (OpenCV, DICT_6X6_250)
     aruco_detector = Node(
-        package='gerbil_bringup',
+        package='capybara_bringup',
         executable='aruco_detector.py',
         name='aruco_detector',
         output='screen',
@@ -157,9 +140,8 @@ def generate_launch_description():
         use_mock_hardware_arg,
         foxglove_port_arg,
         # Robot base
-        gerbil_launch,
+        capybara_launch,
         foxglove_bridge,
-        depthimage_to_laserscan,
         # Navigation (no localization needed)
         controller_server,
         planner_server,

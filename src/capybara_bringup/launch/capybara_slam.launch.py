@@ -21,21 +21,22 @@ def generate_launch_description():
         description='Foxglove WebSocket port'
     )
 
-    gerbil_bringup_share = FindPackageShare('gerbil_bringup')
+    capybara_bringup_share = FindPackageShare('capybara_bringup')
 
-    # Base robot launch (controllers, ZED, robot_state_publisher)
-    gerbil_launch = IncludeLaunchDescription(
+    # Base robot launch (controllers, ZED, LIDAR, robot_state_publisher)
+    capybara_launch = IncludeLaunchDescription(
         AnyLaunchDescriptionSource([
             PathJoinSubstitution([
-                gerbil_bringup_share,
+                capybara_bringup_share,
                 'launch',
-                'gerbil.launch.xml'
+                'capybara.launch.xml'
             ])
         ]),
         launch_arguments={
             'use_mock_hardware': LaunchConfiguration('use_mock_hardware'),
             'launch_rviz': 'false',
             'launch_zed': 'true',
+            'launch_lidar': 'true',
         }.items()
     )
 
@@ -54,41 +55,15 @@ def generate_launch_description():
         output='screen'
     )
 
-    # Convert ZED pointcloud to 2D laser scan for SLAM Toolbox
-    # Uses full 3D cloud with height filtering — sees obstacles at all heights
-    pointcloud_to_laserscan = Node(
-        package='pointcloud_to_laserscan',
-        executable='pointcloud_to_laserscan_node',
-        name='pointcloud_to_laserscan',
-        parameters=[{
-            'target_frame': 'base_link',
-            'transform_tolerance': 0.01,
-            'min_height': 0.1,
-            'max_height': 1.5,
-            'angle_min': -1.5708,           # -90 degrees
-            'angle_max': 1.5708,            # +90 degrees
-            'angle_increment': 0.0087,      # ~0.5 degree resolution
-            'scan_time': 0.1,
-            'range_min': 0.45,
-            'range_max': 10.0,
-            'use_inf': True,
-            'inf_epsilon': 1.0,
-        }],
-        remappings=[
-            ('cloud_in', '/zed/zed_node/point_cloud/cloud_registered'),
-            ('scan', '/scan'),
-        ],
-        output='screen'
-    )
-
     # SLAM Toolbox for mapping and localization
+    # Now uses real LIDAR /scan directly instead of depth-to-laser conversion
     slam_toolbox = Node(
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
         name='slam_toolbox',
         parameters=[
             PathJoinSubstitution([
-                gerbil_bringup_share,
+                capybara_bringup_share,
                 'config',
                 'slam_toolbox.yaml'
             ])
@@ -98,7 +73,7 @@ def generate_launch_description():
 
     # ArUco marker detection (OpenCV, DICT_6X6_250)
     aruco_detector = Node(
-        package='gerbil_bringup',
+        package='capybara_bringup',
         executable='aruco_detector.py',
         name='aruco_detector',
         output='screen',
@@ -112,9 +87,8 @@ def generate_launch_description():
     return LaunchDescription([
         use_mock_hardware_arg,
         foxglove_port_arg,
-        gerbil_launch,
+        capybara_launch,
         foxglove_bridge,
-        pointcloud_to_laserscan,
         slam_toolbox,
         aruco_detector,
     ])

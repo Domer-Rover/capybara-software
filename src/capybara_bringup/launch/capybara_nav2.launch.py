@@ -21,21 +21,21 @@ def generate_launch_description():
         description='Foxglove WebSocket port'
     )
 
-    gerbil_bringup_share = FindPackageShare('gerbil_bringup')
+    capybara_bringup_share = FindPackageShare('capybara_bringup')
 
     nav2_params = PathJoinSubstitution([
-        gerbil_bringup_share, 'config', 'nav2_params.yaml'
+        capybara_bringup_share, 'config', 'nav2_params.yaml'
     ])
 
     map_yaml = PathJoinSubstitution([
-        gerbil_bringup_share, 'maps', 'gerbil_map.yaml'
+        capybara_bringup_share, 'maps', 'capybara_map.yaml'
     ])
 
     # Base robot launch (controllers, ZED, robot_state_publisher)
-    gerbil_launch = IncludeLaunchDescription(
+    capybara_launch = IncludeLaunchDescription(
         AnyLaunchDescriptionSource([
             PathJoinSubstitution([
-                gerbil_bringup_share, 'launch', 'gerbil.launch.xml'
+                capybara_bringup_share, 'launch', 'capybara.launch.xml'
             ])
         ]),
         launch_arguments={
@@ -60,25 +60,8 @@ def generate_launch_description():
         output='screen'
     )
 
-    # Convert ZED depth image to 2D laser scan for AMCL
-    depthimage_to_laserscan = Node(
-        package='depthimage_to_laserscan',
-        executable='depthimage_to_laserscan_node',
-        name='depthimage_to_laserscan_node',
-        parameters=[
-            PathJoinSubstitution([
-                gerbil_bringup_share, 'config', 'depthimage_to_laserscan.yaml'
-            ])
-        ],
-        remappings=[
-            ('depth', '/zed/zed_node/depth/depth_registered'),
-            ('depth_camera_info', '/zed/zed_node/depth/camera_info'),
-            ('scan', '/scan'),
-        ],
-        output='screen'
-    )
-
     # --- Localization (map_server + AMCL) ---
+    # /scan is provided by LIDAR in capybara.launch.xml
 
     map_server = Node(
         package='nav2_map_server',
@@ -146,7 +129,7 @@ def generate_launch_description():
     # --- ArUco Marker Detection (OpenCV, DICT_6X6_250) ---
 
     aruco_detector = Node(
-        package='gerbil_bringup',
+        package='capybara_bringup',
         executable='aruco_detector.py',
         name='aruco_detector',
         output='screen',
@@ -177,9 +160,8 @@ def generate_launch_description():
         use_mock_hardware_arg,
         foxglove_port_arg,
         # Robot base
-        gerbil_launch,
+        capybara_launch,
         foxglove_bridge,
-        depthimage_to_laserscan,
         # Localization
         map_server,
         amcl,
