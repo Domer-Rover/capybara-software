@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
-    container_name: gerbil-dev
+    container_name: capybara-dev
     ports:
       - "6080:80"
     shm_size: '512m'
@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.jetson
-    container_name: gerbil-jetson
+    container_name: capybara-jetson
     network_mode: host
     privileged: true
     shm_size: '512m'
@@ -25,6 +25,7 @@ services:
       - ./src:/home/ubuntu/ros2_ws/src
     devices:
       - /dev/ttyTHS1:/dev/ttyTHS1
+      - /dev/ttyUSB0:/dev/ttyUSB0
       - /dev/video0:/dev/video0
       - /dev/i2c-1:/dev/i2c-1
     command: /bin/bash -c "tail -f /dev/null"

@@ -25,5 +25,5 @@ Features:
 Usage:
 ```bash
 docker-compose up ros-jetson
-docker exec -it gerbil-jetson bash
+docker exec -it capybara-jetson bash
 ```

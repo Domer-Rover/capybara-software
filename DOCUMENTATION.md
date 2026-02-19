@@ -1,4 +1,4 @@
-# Gerbil Robot Documentation
+# Capybara Robot Documentation
 
 ## Jetson Serial Port Setup
 
@@ -48,7 +48,7 @@ docker-compose up -d ros-jetson
 # -d flag runs container in background without blocking terminal
 
 # Enter running Jetson container
-docker exec -it gerbil-jetson bash
+docker exec -it capybara-jetson bash
 ```
 
 ### Stop Containers
@@ -145,7 +145,7 @@ rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
 
 # Build specific packages
-colcon build --packages-select gerbil_hw gerbil_description gerbil_bringup
+colcon build --packages-select capybara_hw capybara_description capybara_bringup
 
 # Build with release optimizations
 colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
@@ -161,7 +161,7 @@ source install/setup.bash
 ### Main Launch File
 
 ```bash
-ros2 launch gerbil_bringup gerbil.launch.xml
+ros2 launch capybara_bringup capybara.launch.xml
 ```
 
 ### Available Arguments
@@ -176,16 +176,16 @@ ros2 launch gerbil_bringup gerbil.launch.xml
 
 ```bash
 # Development: Mock hardware with RViz
-ros2 launch gerbil_bringup gerbil.launch.xml use_mock_hardware:=true launch_rviz:=true
+ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=true launch_rviz:=true
 
 # Development: Mock hardware without RViz (headless)
-ros2 launch gerbil_bringup gerbil.launch.xml use_mock_hardware:=true launch_rviz:=false
+ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=true launch_rviz:=false
 
 # Jetson: Real hardware without RViz
-ros2 launch gerbil_bringup gerbil.launch.xml use_mock_hardware:=false launch_rviz:=false
+ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=false launch_rviz:=false
 
 # Jetson: Real hardware with IMU
-ros2 launch gerbil_bringup gerbil.launch.xml use_mock_hardware:=false launch_imu:=true
+ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=false launch_imu:=true
 ```
 
 ---
@@ -273,7 +273,7 @@ sudo reboot
 
 ```bash
 # Test script location
-cd ~/ros2_ws/src/gerbil-software/scripts
+cd ~/ros2_ws/src/capybara-software/scripts
 
 # Run test
 python3 test_roboclaw.py
