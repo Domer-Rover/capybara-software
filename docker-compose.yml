@@ -5,13 +5,14 @@ services:
       dockerfile: docker/Dockerfile.dev
     container_name: capybara-dev
     ports:
-      - "6080:80"
+      - "6080:80"       # noVNC browser desktop: http://localhost:6080
+      - "8765:8765"     # Foxglove WebSocket (if running foxglove_bridge inside dev container)
     shm_size: '512m'
     security_opt:
       - seccomp:unconfined
     volumes:
       - ./src:/home/ubuntu/ros2_ws/src
-    command: /bin/bash -c "supervisord -c /etc/supervisor/supervisord.conf"
+    # supervisord starts the noVNC + VNC server — do not override with a custom command
 
   ros-jetson:
     build:
@@ -19,13 +20,13 @@ services:
       dockerfile: docker/Dockerfile.jetson
     container_name: capybara-jetson
     network_mode: host
-    privileged: true
-    shm_size: '512m'
+    privileged: true      # needed for ZED SDK GPU + USB enumeration, i2c, serial
+    shm_size: '1g'        # ZED SDK needs more shared memory than 512m (depth + pointcloud buffers)
     volumes:
       - ./src:/home/ubuntu/ros2_ws/src
     devices:
-      - /dev/ttyTHS1:/dev/ttyTHS1
-      - /dev/ttyUSB0:/dev/ttyUSB0
-      - /dev/video0:/dev/video0
-      - /dev/i2c-1:/dev/i2c-1
+      - /dev/ttyTHS1:/dev/ttyTHS1   # GNSS module (UART on Jetson carrier board)
+      - /dev/ttyUSB0:/dev/ttyUSB0   # RoboClaw (USB-TTL daisy chain)
+      - /dev/i2c-1:/dev/i2c-1       # BNO055 IMU (I2C bus 1)
+      # ZED2i: accessed via /dev/bus/usb — privileged:true handles USB enumeration
     command: /bin/bash -c "tail -f /dev/null"

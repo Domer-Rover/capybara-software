@@ -1,15 +1,26 @@
+# ============================================================
+# Dockerfile.dev — VNC desktop container (simulation only)
+# ============================================================
+# Purpose: Gazebo simulation + RViz2 + nav2 testing on your
+#          dev machine (Mac or Linux). No hardware, no ZED SDK.
+#
+# Access:  http://localhost:6080  (noVNC browser desktop)
+# ============================================================
+
 FROM tiryoh/ros2-desktop-vnc:humble
 
 USER root
 
+# ── Core dev tools ────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y \
     nano \
     git \
     python3-pip \
     wget \
-    zstd \
-    i2c-tools \
-    libi2c-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── ROS2 packages needed to build and simulate the full workspace ─────────
+RUN apt-get update && apt-get install -y \
     ros-humble-ros2-control \
     ros-humble-ros2-controllers \
     ros-humble-controller-manager \
@@ -25,36 +36,47 @@ RUN apt-get update && apt-get install -y \
     ros-humble-nav2-bringup \
     ros-humble-teleop-twist-keyboard \
     ros-humble-slam-toolbox \
-    ros-humble-sllidar-ros2 \
-    ros-humble-turtlebot3* \
-    libserial-dev \
+    ros-humble-pointcloud-to-laserscan \
+    ros-humble-cv-bridge \
     && rm -rf /var/lib/apt/lists/*
 
+# ── Gazebo (x86/amd64 only — not available for ARM64) ────────────────────
+# Gazebo Classic packages only exist for x86. On Apple Silicon the VNC
+# container runs ARM64 natively and Gazebo is skipped automatically.
 ARG TARGETPLATFORM
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] || [ "$(uname -m)" = "x86_64" ]; then \
-    apt-get update && \
-    apt-get install -y \
-    ros-humble-gazebo-ros-pkgs \
-    ros-humble-ros-gz && \
-    rm -rf /var/lib/apt/lists/*; \
+    apt-get update && apt-get install -y \
+        ros-humble-gazebo-ros-pkgs \
+        ros-humble-gazebo-ros2-control \
+        ros-humble-ros-gz \
+    && rm -rf /var/lib/apt/lists/*; \
     fi
 
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] || [ "$(uname -m)" = "x86_64" ]; then \
-    wget -q --no-check-certificate -O ZED_SDK_Linux.run \
-    https://download.stereolabs.com/zedsdk/4.0/cu118/ubuntu22 && \
-    chmod +x ZED_SDK_Linux.run && \
-    ./ZED_SDK_Linux.run -- silent skip_tools && \
-    rm ZED_SDK_Linux.run; \
-    fi
-
-ENV TURTLEBOT3_MODEL=waffle
-RUN echo "source /opt/ros/humble/setup.bash" >> /etc/bash.bashrc && \
-    echo "export TURTLEBOT3_MODEL=waffle" >> /etc/bash.bashrc
-
+# ── Python packages (minimal — no hardware deps in simulation) ────────────
 RUN pip3 install --no-cache-dir \
     numpy \
-    pandas \
-    basicmicro \
-    pyserial \
-    adafruit-circuitpython-bno055 \
-    adafruit-extended-bus
+    opencv-contrib-python-headless
+
+RUN echo "source /opt/ros/humble/setup.bash" >> /etc/bash.bashrc
+
+# ── Colcon: skip hardware/SDK vendor packages in simulation ──────────────
+# The src/ directory is volume-mounted at runtime, so this defaults.yaml
+# lives outside the mount point and only applies inside this container.
+# Packages ignored: ZED wrapper (requires ZED SDK), roboclaw_serial and
+# capybara_hw (require real hardware libs — libserial, i2c, etc.).
+RUN mkdir -p /home/ubuntu/ros2_ws/.colcon && \
+    printf '%s\n' \
+      'build:' \
+      '  packages-ignore:' \
+      '    - zed_components' \
+      '    - zed_wrapper' \
+      '    - zed_ros2' \
+      '    - roboclaw_serial' \
+      '    - capybara_hw' \
+    > /home/ubuntu/ros2_ws/.colcon/defaults.yaml
+
+# NOTE: ZED SDK excluded — visualize ZED data via Foxglove over the Bullet
+#       network (port 8765 on the Jetson). No local ZED needed.
+# NOTE: Hardware packages (libserial, i2c, sllidar, foxglove-bridge)
+#       excluded — those belong on the Jetson (Dockerfile.jetson).
+# NOTE: supervisord (VNC startup) is handled by the tiryoh base image CMD.

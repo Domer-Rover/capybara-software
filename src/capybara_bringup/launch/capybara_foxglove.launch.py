@@ -48,13 +48,10 @@ def generate_launch_description():
         package='foxglove_bridge',
         executable='foxglove_bridge',
         name='foxglove_bridge',
-        parameters=[{
-            'port': LaunchConfiguration('foxglove_port'),
-            'address': '0.0.0.0',
-            'num_threads': 4,
-            'max_qos_depth': 10,
-            'send_buffer_limit': 41943040,
-        }],
+        parameters=[
+            PathJoinSubstitution([capybara_bringup_share, 'config', 'foxglove_bridge.yaml']),
+            {'port': LaunchConfiguration('foxglove_port')},
+        ],
         output='screen'
     )
 

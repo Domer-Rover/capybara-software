@@ -12,16 +12,16 @@
     <xacro:property name="wheel_length" value="0.0889" />     <!-- 3.5 inches -->
     <xacro:property name="wheel_mass"   value="0.5"    />
 
-    <!-- Track widths: center-of-left-wheel to center-of-right-wheel -->
+    <!-- Track widths center-of-left-wheel to center-of-right-wheel -->
     <xacro:property name="wheel_separation"      value="0.762"  />  <!-- 30 in — front + mid axles -->
     <xacro:property name="rear_wheel_separation" value="0.9144" />  <!-- 36 in — rear axle (wider) -->
 
-    <!-- Axle X positions (mid axle = chassis center; 18 in = 0.4572 m between each pair) -->
-    <xacro:property name="front_axle_x" value="0.2286"  />    <!-- +9 inches from center -->
+    <!-- Axle X positions (mid axle = chassis center; 18 in = 0.4572 m between each adjacent pair) -->
+    <xacro:property name="front_axle_x" value="0.4572"  />    <!-- +18 inches from center -->
     <xacro:property name="mid_axle_x"   value="0.0"     />
-    <xacro:property name="rear_axle_x"  value="-0.2286" />    <!-- -9 inches from center -->
+    <xacro:property name="rear_axle_x"  value="-0.4572" />    <!-- -18 inches from center -->
 
-    <!-- LIDAR pole: height from chassis top surface to LIDAR center -->
+    <!-- LIDAR pole height from chassis top surface to LIDAR center -->
     <xacro:property name="lidar_pole_height" value="0.508" />  <!-- 20 inches -->
 
     <!-- Antenna heights measured from chassis bottom (two different antennas) -->
@@ -243,7 +243,7 @@
         <origin xyz="0 0 ${base_height + 0.005}" rpy="0 0 0" />
     </joint>
 
-    <!-- ZED2i: embedded in center of front panel, 3 in (0.0762 m) above chassis bottom -->
+    <!-- ZED2i embedded in center of front panel, 3 in (0.0762 m) above chassis bottom -->
     <joint name="camera_joint" type="fixed">
         <parent link="base_link" />
         <child link="zed_camera_link" />
@@ -264,14 +264,14 @@
         <origin xyz="0 0 ${base_height + lidar_pole_height + 0.023}" rpy="0 0 0" />
     </joint>
 
-    <!-- 2.4 GHz antenna: left side of back face, base at chassis bottom, rising upward -->
+    <!-- 2.4 GHz antenna left side of back face, base at chassis bottom, rising upward -->
     <joint name="left_antenna_joint" type="fixed">
         <parent link="base_link" />
         <child link="left_antenna_link" />
         <origin xyz="${-base_length / 2.0} ${base_width / 2.0} ${left_antenna_height / 2.0}" rpy="0 0 0" />
     </joint>
 
-    <!-- 900 MHz antenna: right side of back face, base at chassis bottom, rising upward -->
+    <!-- 900 MHz antenna right side of back face, base at chassis bottom, rising upward -->
     <joint name="right_antenna_joint" type="fixed">
         <parent link="base_link" />
         <child link="right_antenna_link" />

@@ -25,7 +25,7 @@
             serial_number: 0 # usually overwritten by launch file
             pub_resolution: 'CUSTOM' # The resolution used for image and depth map publishing. 'NATIVE' to use the same `general.grab_resolution` - `CUSTOM` to apply the `general.pub_downscale_factor` downscale factory to reduce bandwidth in transmission
             pub_downscale_factor: 2.0 # rescale factor used to rescale image before publishing when 'pub_resolution' is 'CUSTOM'
-            pub_frame_rate: 15.0 # Publishing at full grab rate, using compression to manage bandwidth
+            pub_frame_rate: 30.0 # Publishing at full grab rate, using compression to manage bandwidth
             enable_image_validity_check: 1 # [SDK5 required] Sets the image validity check. If set to 1, the SDK will check if the frames are valid before processing.
             gpu_id: -1
             optional_opencv_calibration_file: '' # Optional path where the ZED SDK can find a file containing the calibration information of the camera computed by OpenCV. Read the ZED SDK documentation for more information: https://www.stereolabs.com/docs/api/structsl_1_1InitParameters.html#a9eab2753374ef3baec1d31960859ba19
@@ -47,7 +47,7 @@
         sensors:
             publish_imu_tf: true # [usually overwritten by launch file] enable/disable the IMU TF broadcasting
             sensors_image_sync: false # Synchronize Sensors messages with latest published video/depth message
-            sensors_pub_rate: 100. # Reduced from 200 for Jetson Nano stability
+            sensors_pub_rate: 200. # 200Hz for tighter IMU fusion with visual odometry on Orin Nano
 
         region_of_interest:
             automatic_roi: false # Enable the automatic ROI generation to automatically detect part of the robot in the FoV and remove them from the processing. Note: if enabled the value of `manual_polygon` is ignored
@@ -67,33 +67,33 @@
             depth_mode: 'NEURAL_LIGHT' # Orin Nano GPU can handle DNN-based depth estimation
             depth_stabilization: 1 # Enabled - ZED positional tracking is active, stabilization improves depth quality
             openni_depth_mode: false # 'false': 32bit float [meters], 'true': 16bit unsigned int [millimeters]
-            point_cloud_freq: 5.0 # Reduced from 30 - point clouds are expensive on Jetson Nano
+            point_cloud_freq: 10.0 # Increased from 5 — needed for responsive obstacle detection via pointcloud_to_laserscan
             point_cloud_res: 'COMPACT' # The resolution used for point cloud publishing - 'COMPACT'-Standard resolution. Optimizes processing and bandwidth, 'REDUCED'-Half resolution. Low processing and bandwidth requirements
-            depth_confidence: 95 # [DYNAMIC]
+            depth_confidence: 90 # [DYNAMIC] - Reduced from 95: more permissive outdoors where grass creates noisy depth returns
             depth_texture_conf: 100 # [DYNAMIC]
             remove_saturated_areas: true # [DYNAMIC]
 
         pos_tracking:
-            pos_tracking_enabled: true # Disabled - using diff_drive_controller for odometry
-            pos_tracking_mode: 'GEN_2' # Matches the ZED SDK setting: 'GEN_1', 'GEN_2'
-            imu_fusion: true # enable/disable IMU fusion. When set to false, only the optical odometry will be used.
-            publish_tf: true # Disabled - diff_drive_controller publishes odom TF
-            publish_map_tf: false # Disabled - will use SLAM toolbox for map TF
+            pos_tracking_enabled: true
+            pos_tracking_mode: 'GEN_2' # 'GEN_1', 'GEN_2' — GEN_2 is more accurate for ground robots
+            imu_fusion: true # IMU + visual odometry fusion for robust pose estimates
+            publish_tf: true # ZED publishes odom→base_footprint TF (diff_drive enable_odom_tf is false)
+            publish_map_tf: false # SLAM toolbox handles map TF when needed
             map_frame: 'map'
             odometry_frame: 'odom'
             base_frame: 'base_footprint'
             area_memory_db_path: ''
-            area_memory: true # Enable to detect loop closure
-            reset_odom_with_loop_closure: true # Re-initialize odometry to the last valid pose when loop closure happens (reset camera odometry drift)
-            depth_min_range: 0.0 # Set this value for removing fixed zones of the robot in the FoV of the camerafrom the visual odometry evaluation
-            set_as_static: false # If 'true' the camera will be static and not move in the environment
-            set_gravity_as_origin: true # If 'true' align the positional tracking world to imu gravity measurement. Keep the yaw from the user initial pose.
-            floor_alignment: false # Enable to automatically calculate camera/floor offset
-            initial_base_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Initial position of the `camera_link` frame in the map -> [X, Y, Z, R, P, Y]
-            path_pub_rate: 2.0 # [DYNAMIC] - Camera trajectory publishing frequency
-            path_max_count: -1 # use '-1' for unlimited path size
-            two_d_mode: false # Force navigation on a plane. If true the Z value will be fixed to 'fixed_z_value', roll and pitch to zero
-            fixed_z_value: 0.00 # Value to be used for Z coordinate if `two_d_mode` is true
+            area_memory: true # Loop closure detection
+            reset_odom_with_loop_closure: true # Re-initialize odometry on loop closure to correct drift
+            depth_min_range: 0.3 # Exclude chassis/mount area in front of camera from visual tracking
+            set_as_static: false
+            set_gravity_as_origin: true # Align world to IMU gravity — keeps pitch/roll zeroed at startup
+            floor_alignment: false
+            initial_base_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            path_pub_rate: 5.0 # [DYNAMIC] - Increased from 2.0 for smoother path visualization in Foxglove
+            path_max_count: -1
+            two_d_mode: true # CRITICAL for ground robot: forces Z=0, roll=0, pitch=0 — eliminates vertical drift in visual odometry
+            fixed_z_value: 0.0 # Z position locked to ground plane
             transform_time_offset: 0.0 # The value added to the timestamp of `map->odom` and `odom->camera_link` transform being generated
             reset_pose_with_svo_loop: true # Reset the camera pose the `initial_base_pose` when the SVO loop is enabled and the SVO playback reaches the end of the file.
 

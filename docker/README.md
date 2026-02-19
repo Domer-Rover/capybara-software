@@ -6,12 +6,12 @@ Development environment with GUI support.
 Features:
 - Ubuntu desktop via noVNC (http://localhost:6080)
 - RViz, Gazebo (Intel/AMD only)
-- ZED2i camera support
 - Navigation2 packages
 
 Usage:
 ```bash
-docker-compose up ros-dev
+# Development container (foreground, aka your not on the Jetson, but need ros2)
+docker-compose up ros-dev # Access via browser: http://localhost:6080
 ```
 
 ## Dockerfile.jetson
@@ -20,10 +20,14 @@ Headless environment for Jetson hardware.
 Features:
 - ARM64 optimized
 - ZED2i with Jetson SDK
-- Hardware access (UART, I2C, USB)
+- Hardware access (UART, USB)
+- Ideally running during comp.
 
 Usage:
 ```bash
-docker-compose up ros-jetson
+# Jetson container (detached/background mode) (use this when sshed into Jetson)
+docker-compose up -d ros-jetson # -d flag runs container in background without blocking terminal
+
+# Enter running Jetson container
 docker exec -it capybara-jetson bash
 ```

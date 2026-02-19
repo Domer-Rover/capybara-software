@@ -1,46 +1,112 @@
+# ============================================================
+# Dockerfile.jetson — Headless rover container (Jetson only)
+# ============================================================
+# Purpose: Run ALL capybara launch files on the actual Jetson.
+#          Every package in src/ that needs to build or run is
+#          covered here. This is the dependency source of truth.
+#
+# Usage:
+#   docker compose up ros-jetson
+#   docker exec -it capybara-jetson bash
+#   colcon build && source install/setup.bash
+#   ros2 launch capybara_bringup capybara_nav2_zed.launch.py use_mock_hardware:=false
+# ============================================================
+
 FROM ros:humble-ros-base
 
 USER root
 
+# ── System tools ──────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y \
+    nano \
     git \
     python3-pip \
     wget \
     zstd \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Hardware interface libraries ──────────────────────────────────────────
+RUN apt-get update && apt-get install -y \
     i2c-tools \
     libi2c-dev \
+    libserial-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── ROS2 control stack (capybara_hw + diff_drive_controller) ─────────────
+RUN apt-get update && apt-get install -y \
     ros-humble-ros2-control \
     ros-humble-ros2-controllers \
     ros-humble-controller-manager \
     ros-humble-hardware-interface \
     ros-humble-diff-drive-controller \
     ros-humble-joint-state-broadcaster \
-    ros-humble-xacro \
-    ros-humble-robot-state-publisher \
-    ros-humble-navigation2 \
-    ros-humble-nav2-bringup \
-    ros-humble-teleop-twist-keyboard \
-    ros-humble-foxglove-bridge \
-    ros-humble-slam-toolbox \
-    ros-humble-sllidar-ros2 \
-    libserial-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# ── Robot description + URDF ──────────────────────────────────────────────
+RUN apt-get update && apt-get install -y \
+    ros-humble-xacro \
+    ros-humble-robot-state-publisher \
+    ros-humble-joint-state-publisher \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Navigation (nav2 odom-only + SLAM) ───────────────────────────────────
+RUN apt-get update && apt-get install -y \
+    ros-humble-navigation2 \
+    ros-humble-nav2-bringup \
+    ros-humble-slam-toolbox \
+    ros-humble-teleop-twist-keyboard \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Sensors ───────────────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y \
+    ros-humble-sllidar-ros2 \
+    ros-humble-pointcloud-to-laserscan \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Foxglove remote visualization ─────────────────────────────────────────
+RUN apt-get update && apt-get install -y \
+    ros-humble-foxglove-bridge \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── ZED wrapper build + runtime dependencies ──────────────────────────────
+# Derived from vendors/zed_wrapper/zed_components/package.xml.
+# Without these, colcon build of the ZED vendor package fails.
+RUN apt-get update && apt-get install -y \
+    ros-humble-cv-bridge \
+    ros-humble-image-transport \
+    ros-humble-image-transport-plugins \
+    ros-humble-compressed-image-transport \
+    ros-humble-compressed-depth-image-transport \
+    ros-humble-theora-image-transport \
+    ros-humble-point-cloud-transport \
+    ros-humble-point-cloud-transport-plugins \
+    ros-humble-nmea-msgs \
+    ros-humble-geographic-msgs \
+    ros-humble-robot-localization \
+    ros-humble-diagnostic-updater \
+    ros-humble-cob-srvs \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── ZED SDK ───────────────────────────────────────────────────────────────
+# Must match the vendor/zed_wrapper version (currently 4.2.1).
+# Verify your L4T version: cat /etc/nv_tegra_release
+#   JetPack 5.1.2 = L4T 35.4  ← default here
+#   JetPack 5.1.3 = L4T 35.5  → change l4t35.4 to l4t35.5 if needed
+# skip_cuda: CUDA is already on the Jetson; SDK installs only its own libs.
 RUN wget -q --no-check-certificate -O ZED_SDK_Linux.run \
-    https://download.stereolabs.com/zedsdk/4.0/l4t35.4/jetsons && \
+    https://download.stereolabs.com/zedsdk/4.2/l4t35.4/jetsons && \
     chmod +x ZED_SDK_Linux.run && \
-    ./ZED_SDK_Linux.run -- silent skip_tools && \
+    ./ZED_SDK_Linux.run -- silent skip_tools skip_cuda && \
     rm ZED_SDK_Linux.run
 
-RUN pip3 install --no-cache-dir \
-    numpy \
-    basicmicro \
-    pyserial \
-    smbus2 \
-    adafruit-circuitpython-bno055 \
-    adafruit-extended-bus
+# ── Python dependencies (from requirements.txt at repo root) ──────────────
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
+# ── Workspace setup ───────────────────────────────────────────────────────
 RUN mkdir -p /home/ubuntu/ros2_ws/src
 WORKDIR /home/ubuntu/ros2_ws
 
-RUN echo "source /opt/ros/humble/setup.bash" >> /etc/bash.bashrc
+RUN echo "source /opt/ros/humble/setup.bash" >> /etc/bash.bashrc && \
+    echo "[ -f /home/ubuntu/ros2_ws/install/setup.bash ] && source /home/ubuntu/ros2_ws/install/setup.bash" >> /etc/bash.bashrc

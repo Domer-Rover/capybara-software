@@ -39,6 +39,10 @@
     </group>
 
     <!-- ==================== LIDAR (STL-19P) ==================== -->
+    <!-- Used by capybara_slam.launch.py (launch_lidar:=true).           -->
+    <!-- Nav2 launches manage their own scan source:                      -->
+    <!--   capybara_nav2_simple.launch.py  — launches LIDAR directly      -->
+    <!--   capybara_nav2_zed.launch.py     — uses pointcloud_to_laserscan -->
     <group if="$(var launch_lidar)">
         <node pkg="sllidar_ros2" exec="sllidar_node" name="sllidar_node" output="screen">
             <param name="serial_port" value="/dev/ttyUSB0" />
