@@ -2,7 +2,7 @@
 
 ## Jetson Serial Port Setup
 
-Configure UART for RoboClaw motor controller communication.
+Configure UART for RoboClaw, Modems, Science Sensors 
 
 ```bash
 # Check if port exists
@@ -39,13 +39,12 @@ docker-compose build ros-jetson
 ### Run Containers
 
 ```bash
-# Development container (foreground with logs)
-docker-compose up ros-dev
-# Access via browser: http://localhost:6080
+# Development container (foreground, aka your not on the Jetson, but need ros2)
+docker-compose up ros-dev # Access via browser: http://localhost:6080
 
-# Jetson container (detached/background mode)
-docker-compose up -d ros-jetson
-# -d flag runs container in background without blocking terminal
+
+# Jetson container (detached/background mode) (use this when sshed into Jetson)
+docker-compose up -d ros-jetson # -d flag runs container in background without blocking terminal
 
 # Enter running Jetson container
 docker exec -it capybara-jetson bash
@@ -62,6 +61,33 @@ docker-compose down
 
 # Force rebuild (no cache)
 docker-compose build --no-cache ros-dev
+```
+
+---
+
+## ROS2 Workspace Build
+
+### Inside Container
+
+```bash
+# Navigate to workspace
+cd ~/ros2_ws
+
+# Install dependencies
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+
+# Build all packages
+colcon build --symlink-install
+
+# Build specific packages
+colcon build --packages-select capybara_hw capybara_description capybara_bringup
+
+# Build with release optimizations
+colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
+
+# Source the workspace
+source install/setup.bash
 ```
 
 ---
@@ -129,63 +155,36 @@ Common topics published by ZED wrapper:
 
 ---
 
-## ROS2 Workspace Build
-
-### Inside Container
-
-```bash
-# Navigate to workspace
-cd ~/ros2_ws
-
-# Install dependencies
-rosdep update
-rosdep install --from-paths src --ignore-src -r -y
-
-# Build all packages
-colcon build --symlink-install
-
-# Build specific packages
-colcon build --packages-select capybara_hw capybara_description capybara_bringup
-
-# Build with release optimizations
-colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
-
-# Source the workspace
-source install/setup.bash
-```
-
----
-
 ## Launch Arguments
 
 ### Main Launch File
 
 ```bash
-ros2 launch capybara_bringup capybara.launch.xml
+ros2 launch capybara_bringup capybara_foxglove.launch.py
 ```
 
 ### Available Arguments
 
 | Argument | Default | Options | Description |
 |----------|---------|---------|-------------|
-| `use_mock_hardware` | `true` | `true`, `false` | Enable mock hardware for testing without physical robot |
-| `launch_rviz` | `true` | `true`, `false` | Launch RViz visualization |
-| `launch_imu` | `false` | `true`, `false` | Launch IMU node |
+| `use_mock_hardware` | `false` | `true`, `false` | Enable mock hardware for testing without physical robot |
+| `launch_rviz` | `false` | `true`, `false` | Launch RViz visualization |
+| `launch_zed` | `true` | `true`, `false` | Launch ZED camera node |
 
 ### Common Launch Commands
 
 ```bash
 # Development: Mock hardware with RViz
-ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=true launch_rviz:=true
+ros2 launch capybara_bringup capybara_foxglove.launch.py use_mock_hardware:=true launch_rviz:=true
 
 # Development: Mock hardware without RViz (headless)
-ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=true launch_rviz:=false
+ros2 launch capybara_bringup capybara_foxglove.launch.py use_mock_hardware:=true launch_rviz:=false
 
 # Jetson: Real hardware without RViz
-ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=false launch_rviz:=false
+ros2 launch capybara_bringup capybara_foxglove.launch.py use_mock_hardware:=false launch_rviz:=false
 
-# Jetson: Real hardware with IMU
-ros2 launch capybara_bringup capybara.launch.xml use_mock_hardware:=false launch_imu:=true
+# Jetson: Real hardware with ZED camera
+ros2 launch capybara_bringup capybara_foxglove.launch.py use_mock_hardware:=false launch_zed:=true
 ```
 
 ---
