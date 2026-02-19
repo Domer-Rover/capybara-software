@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""Nav2 odom-only navigation with STL-19P LIDAR obstacle detection.
+"""Nav2 odom-only navigation using ZED point cloud for obstacle detection.
 
-Navigates purely in the odom frame using ZED visual odometry.
-No SLAM map, no AMCL localization. Send goals relative to the odom origin.
-Requires the STL-19P LIDAR to be physically connected (/dev/ttyUSB0).
+Identical to capybara_nav2_simple.launch.py but replaces the STL-19P LIDAR
+with pointcloud_to_laserscan — converts the ZED2i depth point cloud to a
+2D /scan LaserScan that nav2 costmaps can consume directly.
 
-For LIDAR-free obstacle detection using ZED depth, use:
-  capybara_nav2_zed.launch.py  (uses pointcloud_to_laserscan instead)
+Use this when the LIDAR is not available or not connected.
+For LIDAR-based obstacle detection use:
+  capybara_nav2_simple.launch.py
+
+Requires:
+  sudo apt install ros-humble-pointcloud-to-laserscan
 
 Usage:
-  ros2 launch capybara_bringup capybara_nav2_simple.launch.py use_mock_hardware:=false
+  ros2 launch capybara_bringup capybara_nav2_zed.launch.py use_mock_hardware:=false
 
-Send a goal (e.g. 1.5m / ~5ft forward) in Foxglove on /goal_pose (frame: odom), or:
+Send a goal in Foxglove on /goal_pose (frame: odom), or:
   ros2 topic pub --once /goal_pose geometry_msgs/PoseStamped \
     "{header: {frame_id: 'odom'}, pose: {position: {x: 1.5}, orientation: {w: 1.0}}}"
 """
@@ -69,16 +73,30 @@ def generate_launch_description():
         output='screen'
     )
 
-    # STL-19P LIDAR — provides /scan for nav2 costmap obstacle detection
-    lidar_node = Node(
-        package='sllidar_ros2',
-        executable='sllidar_node',
-        name='sllidar_node',
+    # ZED point cloud → /scan conversion for nav2 obstacle detection.
+    # Slices the 3D point cloud into a horizontal band (5–60 cm above ground)
+    # and projects it to a 2D LaserScan on /scan.
+    pointcloud_to_laserscan = Node(
+        package='pointcloud_to_laserscan',
+        executable='pointcloud_to_laserscan_node',
+        name='pointcloud_to_laserscan',
+        remappings=[
+            ('cloud_in', '/zed/zed_node/point_cloud/cloud_registered'),
+            ('scan',     '/scan'),
+        ],
         parameters=[{
-            'serial_port': '/dev/ttyUSB0',
-            'serial_baudrate': 38400,
-            'frame_id': 'laser_frame',
-            'scan_mode': 'Standard',
+            'target_frame':        'base_footprint',
+            'transform_tolerance': 0.01,
+            'min_height':          0.05,    # ignore ground plane (< 5 cm)
+            'max_height':          0.60,    # capture obstacles up to 60 cm (low objects in grass)
+            'angle_min':          -3.14159, # full 180° horizontal sweep from ZED
+            'angle_max':           3.14159,
+            'angle_increment':     0.00873, # ~0.5° resolution
+            'scan_time':           0.033,   # matches 30fps grab rate
+            'range_min':           0.3,     # ZED2i min reliable depth
+            'range_max':           5.0,     # practical outdoor obstacle range
+            'use_inf':             True,
+            'inf_epsilon':         1.0,
         }],
         output='screen'
     )
@@ -154,8 +172,8 @@ def generate_launch_description():
         # Robot base (controllers + ZED)
         capybara_launch,
         foxglove_bridge,
-        # LIDAR for obstacle detection
-        lidar_node,
+        # ZED depth → /scan for obstacle detection (no LIDAR needed)
+        pointcloud_to_laserscan,
         # Navigation (odom-only, no map/AMCL)
         controller_server,
         planner_server,
