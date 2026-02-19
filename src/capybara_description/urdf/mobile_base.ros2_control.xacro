@@ -16,13 +16,13 @@
         <xacro:unless value="$(arg use_mock_hardware)">
             <hardware>
                 <plugin>capybara_hw/RoboClawHardwareInterface</plugin>
-                <param name="serial_port">/dev/ttyTHS2</param>
+                <param name="serial_port">/dev/ttyUSB0</param>
                 <!-- Duty cycle mode - bypasses velocity PID, no encoders needed -->
                 <param name="use_duty_cycle">true</param>
             </hardware>
         </xacro:unless>
 
-        <!-- ==================== RoboClaw 128 (top): rear_right M1, front_left M2 ==================== -->
+        <!-- ==================== RoboClaw 128 (top) rear_right M1, front_left M2 ==================== -->
         <joint name="front_left_wheel_joint">
             <command_interface name="velocity">
                 <param name="min">-10.0</param>
@@ -46,7 +46,7 @@
             <param name="max_duty_speed">10.0</param>
         </joint>
 
-        <!-- ==================== RoboClaw 129 (middle): mid_right M1, mid_left M2 ==================== -->
+        <!-- ==================== RoboClaw 129 (middle) mid_right M1, mid_left M2 ==================== -->
         <joint name="mid_left_wheel_joint">
             <command_interface name="velocity">
                 <param name="min">-10.0</param>
@@ -70,7 +70,7 @@
             <param name="max_duty_speed">10.0</param>
         </joint>
 
-        <!-- ==================== RoboClaw 130 (bottom): front_right M1, rear_left M2 ==================== -->
+        <!-- ==================== RoboClaw 130 (bottom) front_right M1, rear_left M2 ==================== -->
         <joint name="rear_left_wheel_joint">
             <command_interface name="velocity">
                 <param name="min">-10.0</param>
