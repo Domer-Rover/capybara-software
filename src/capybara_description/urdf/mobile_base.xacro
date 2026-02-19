@@ -1,36 +1,32 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <!-- ROBOT DIMENSIONS -->
-    <!-- TODO measure and update these values for the 6WD chassis -->
-    <xacro:property name="base_length" value="0.6096" />      <!-- 24 inches - UPDATE -->
-    <xacro:property name="base_width" value="0.3048" />       <!-- 12 inches - UPDATE -->
-    <xacro:property name="base_height" value="0.0635" />      <!-- 2.5 inches - UPDATE -->
-    <xacro:property name="base_mass" value="6.8" />           <!-- ~15 lbs - UPDATE -->
+    <!-- ROBOT DIMENSIONS (measured Feb 2026, all values in meters) -->
+    <xacro:property name="base_length" value="0.7112" />      <!-- 28 inches -->
+    <xacro:property name="base_width"  value="0.508"  />      <!-- 20 inches -->
+    <xacro:property name="base_height" value="0.1524" />      <!-- 6 inches  -->
+    <xacro:property name="base_mass"   value="6.8"    />      <!-- ~15 lbs estimate -->
 
-    <!-- TODO measure wheel dimensions for 6WD chassis -->
-    <xacro:property name="wheel_radius" value="0.04756" />    <!-- UPDATE after measuring -->
-    <xacro:property name="wheel_length" value="0.03195" />    <!-- UPDATE after measuring -->
-    <xacro:property name="wheel_mass" value="0.5" />
+    <!-- Wheel dimensions (5 in radius including treads+rims, 3.5 in thick) -->
+    <xacro:property name="wheel_radius" value="0.127"  />     <!-- 5 inches  -->
+    <xacro:property name="wheel_length" value="0.0889" />     <!-- 3.5 inches -->
+    <xacro:property name="wheel_mass"   value="0.5"    />
 
-    <!-- Track widths - front/mid share one width, rear is wider -->
-    <!-- TODO measure both track widths -->
-    <xacro:property name="wheel_separation" value="0.42285" />       <!-- front+mid track width -->
-    <xacro:property name="rear_wheel_separation" value="0.48" />     <!-- rear track width - UPDATE -->
+    <!-- Track widths: center-of-left-wheel to center-of-right-wheel -->
+    <xacro:property name="wheel_separation"      value="0.762"  />  <!-- 30 in — front + mid axles -->
+    <xacro:property name="rear_wheel_separation" value="0.9144" />  <!-- 36 in — rear axle (wider) -->
 
-    <!-- Axle X positions relative to base_link center -->
-    <!-- TODO measure axle spacing for 6WD chassis -->
-    <xacro:property name="front_axle_x" value="${base_length / 2.0 - 0.06}" />
-    <xacro:property name="mid_axle_x" value="0.0" />
-    <xacro:property name="rear_axle_x" value="${-base_length / 2.0 + 0.06}" />
+    <!-- Axle X positions (mid axle = chassis center; 18 in = 0.4572 m between each pair) -->
+    <xacro:property name="front_axle_x" value="0.2286"  />    <!-- +9 inches from center -->
+    <xacro:property name="mid_axle_x"   value="0.0"     />
+    <xacro:property name="rear_axle_x"  value="-0.2286" />    <!-- -9 inches from center -->
 
-    <!-- LIDAR pole height (from chassis top to LIDAR center) -->
-    <!-- TODO measure the actual pole height -->
-    <xacro:property name="lidar_pole_height" value="0.25" />
+    <!-- LIDAR pole: height from chassis top surface to LIDAR center -->
+    <xacro:property name="lidar_pole_height" value="0.508" />  <!-- 20 inches -->
 
-    <!-- Antenna stick height (from chassis top) -->
-    <xacro:property name="antenna_height" value="0.40" />
-    <xacro:property name="antenna_spacing" value="0.10" />
+    <!-- Antenna heights measured from chassis bottom (two different antennas) -->
+    <xacro:property name="left_antenna_height"  value="0.762"  />  <!-- 2.4 GHz — 30 inches, left rear -->
+    <xacro:property name="right_antenna_height" value="0.9144" />  <!-- 900 MHz  — 36 inches, right rear -->
 
     <!-- BASE FOOTPRINT -->
     <link name="base_footprint" />
@@ -184,18 +180,19 @@
     </link>
 
     <!-- ANTENNA STICKS (rear of chassis, visual/collision only) -->
-    <xacro:macro name="antenna_link" params="prefix">
+    <!-- Left = 2.4 GHz (30 in), Right = 900 MHz (36 in) — different heights -->
+    <xacro:macro name="antenna_link" params="prefix height">
         <link name="${prefix}_antenna_link">
             <visual>
                 <geometry>
-                    <cylinder radius="0.005" length="${antenna_height}" />
+                    <cylinder radius="0.005" length="${height}" />
                 </geometry>
                 <origin xyz="0 0 0" rpy="0 0 0" />
                 <material name="grey" />
             </visual>
             <collision>
                 <geometry>
-                    <cylinder radius="0.005" length="${antenna_height}" />
+                    <cylinder radius="0.005" length="${height}" />
                 </geometry>
             </collision>
             <inertial>
@@ -205,8 +202,8 @@
         </link>
     </xacro:macro>
 
-    <xacro:antenna_link prefix="left" />
-    <xacro:antenna_link prefix="right" />
+    <xacro:antenna_link prefix="left"  height="${left_antenna_height}"  />
+    <xacro:antenna_link prefix="right" height="${right_antenna_height}" />
 
     <!-- ==================== JOINTS ==================== -->
 
@@ -246,11 +243,11 @@
         <origin xyz="0 0 ${base_height + 0.005}" rpy="0 0 0" />
     </joint>
 
-    <!-- ZED camera at front edge, on top of chassis, facing forward -->
+    <!-- ZED2i: embedded in center of front panel, 3 in (0.0762 m) above chassis bottom -->
     <joint name="camera_joint" type="fixed">
         <parent link="base_link" />
         <child link="zed_camera_link" />
-        <origin xyz="${base_length / 2.0 - 0.02} 0 ${base_height + 0.015}" rpy="0 0 0" />
+        <origin xyz="${base_length / 2.0} 0 0.0762" rpy="0 0 0" />
     </joint>
 
     <!-- LIDAR pole mounted center of chassis -->
@@ -267,17 +264,18 @@
         <origin xyz="0 0 ${base_height + lidar_pole_height + 0.023}" rpy="0 0 0" />
     </joint>
 
-    <!-- Antenna sticks at rear of chassis -->
+    <!-- 2.4 GHz antenna: left side of back face, base at chassis bottom, rising upward -->
     <joint name="left_antenna_joint" type="fixed">
         <parent link="base_link" />
         <child link="left_antenna_link" />
-        <origin xyz="${rear_axle_x} ${antenna_spacing / 2.0} ${base_height + antenna_height / 2.0}" rpy="0 0 0" />
+        <origin xyz="${-base_length / 2.0} ${base_width / 2.0} ${left_antenna_height / 2.0}" rpy="0 0 0" />
     </joint>
 
+    <!-- 900 MHz antenna: right side of back face, base at chassis bottom, rising upward -->
     <joint name="right_antenna_joint" type="fixed">
         <parent link="base_link" />
         <child link="right_antenna_link" />
-        <origin xyz="${rear_axle_x} ${-antenna_spacing / 2.0} ${base_height + antenna_height / 2.0}" rpy="0 0 0" />
+        <origin xyz="${-base_length / 2.0} ${-base_width / 2.0} ${right_antenna_height / 2.0}" rpy="0 0 0" />
     </joint>
 
 </robot>
