@@ -1,0 +1,74 @@
+# Foxglove bridge shared configuration for all Capybara launch files.
+# port is NOT set here — it is overridden per-launch via the foxglove_port launch arg.
+#
+# topic_whitelist: only these topics are forwarded to Foxglove clients.
+# Covers every topic needed across all launch files:
+#   capybara_foxglove  · capybara_nav2_simple  · capybara_nav2_zed
+#   capybara_nav2      · capybara_slam
+# Patterns are regex — trailing .* matches all subtopics.
+/**:
+    ros__parameters:
+        address: '0.0.0.0'
+        num_threads: 4
+        max_qos_depth: 1          # Keep only the latest message per topic — no frame queuing, no accumulated lag
+        send_buffer_limit: 10485760  # 10 MB: drop old frames instead of buffering them → real-time over Bullet WiFi
+
+        topic_whitelist:
+            # ── Core transforms & robot model ──────────────────────────────
+            - '/tf'
+            - '/tf_static'
+            - '/robot_description'
+            - '/joint_states'
+
+            # ── Drive controller ───────────────────────────────────────────
+            - '/diff_drive_controller/odom'
+            - '/diff_drive_controller/cmd_vel_unstamped'
+
+            # ── ZED2i — camera, odometry, IMU, point cloud ─────────────────
+            - '/zed/zed_node/odom'
+            - '/zed/zed_node/pose'
+            - '/zed/zed_node/path_odom'
+            - '/zed/zed_node/imu/data'
+            - '/zed/zed_node/left/image_rect_color/compressed'
+            - '/zed/zed_node/left/camera_info'
+            - '/zed/zed_node/point_cloud/cloud_registered'
+
+            # ── Obstacle detection (LIDAR or pointcloud_to_laserscan) ──────
+            - '/scan'
+
+            # ── Navigation — goals, plans, costmaps, footprints ───────────
+            - '/goal_pose'
+            - '/plan'
+            - '/local_plan'
+            - '/local_costmap/costmap'
+            - '/local_costmap/costmap_updates'
+            - '/local_costmap/published_footprint'
+            - '/global_costmap/costmap'
+            - '/global_costmap/costmap_updates'
+            - '/global_costmap/published_footprint'
+            - '/navigate_to_pose/.*'
+
+            # ── SLAM map & AMCL localization ───────────────────────────────
+            - '/map'
+            - '/amcl_pose'
+
+            # ── ArUco marker detection ─────────────────────────────────────
+            - '/aruco/.*'
+
+            # ── Diagnostics ────────────────────────────────────────────────
+            - '/diagnostics'
+            - '/rosout'
+
+        # Per-topic QoS overrides.
+        # BEST_EFFORT for the camera: bridge won't wait for ACKs on image frames.
+        # Drops are fine — you always want the freshest frame, not a queued old one.
+        # RELIABLE publisher (ZED) + BEST_EFFORT subscriber (bridge) is valid in ROS2.
+        topic_qos_overrides:
+            - topic: '/zed/zed_node/left/image_rect_color/compressed'
+              reliability: best_effort
+              history: keep_last
+              depth: 1
+            - topic: '/zed/zed_node/point_cloud/cloud_registered'
+              reliability: best_effort
+              history: keep_last
+              depth: 1
