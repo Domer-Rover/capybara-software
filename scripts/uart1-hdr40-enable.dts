@@ -1,0 +1,25 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    overlay-name = "UART1 TX/RX on header pins 8 and 10";
+    compatible = "nvidia,p3767-0000";
+
+    fragment@0 {
+        target = <&pinmux>;
+        __overlay__ {
+            hdr40-pin8 {
+                nvidia,pins = "uart1_tx_pr2";
+                nvidia,function = "uarta";
+                nvidia,tristate = <0x00>;
+                nvidia,enable-input = <0x00>;
+            };
+            hdr40-pin10 {
+                nvidia,pins = "uart1_rx_pr3";
+                nvidia,function = "uarta";
+                nvidia,tristate = <0x01>;
+                nvidia,enable-input = <0x01>;
+            };
+        };
+    };
+};
