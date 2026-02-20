@@ -10,7 +10,7 @@
             grab_frame_rate: 30         # SVGA@30 is comfortable for Orin Nano + NEURAL_LIGHT
             pub_resolution: 'CUSTOM'
             pub_downscale_factor: 2.0   # 2× downscale: 960×600 → ~480×300 published to Foxglove
-            pub_frame_rate: 15.0        # Keep published rate lower — grab fast, publish lean
+            pub_frame_rate: 30.0        # Publish at full grab rate — compression manages bandwidth
 
         depth:
             min_depth: 0.3 # Min: 0.3, Max: 3.0

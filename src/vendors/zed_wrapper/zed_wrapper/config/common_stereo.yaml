@@ -48,6 +48,7 @@
             publish_imu_tf: true # [usually overwritten by launch file] enable/disable the IMU TF broadcasting
             sensors_image_sync: false # Synchronize Sensors messages with latest published video/depth message
             sensors_pub_rate: 200. # 200Hz for tighter IMU fusion with visual odometry on Orin Nano
+            publish_urdf: true # Publish a URDF model of the IMU and GNSS sensors attached to the camera frame
 
         region_of_interest:
             automatic_roi: false # Enable the automatic ROI generation to automatically detect part of the robot in the FoV and remove them from the processing. Note: if enabled the value of `manual_polygon` is ignored
@@ -96,9 +97,6 @@
             fixed_z_value: 0.0 # Z position locked to ground plane
             transform_time_offset: 0.0 # The value added to the timestamp of `map->odom` and `odom->camera_link` transform being generated
             reset_pose_with_svo_loop: true # Reset the camera pose the `initial_base_pose` when the SVO loop is enabled and the SVO playback reaches the end of the file.
-
-        sensors:
-            publish_urdf: true # Publish a URDF model of the IMU and GNSS sensors attached to the camera frame
 
         gnss_fusion:
             gnss_fusion_enabled: true # fuse 'sensor_msg/NavSatFix' message information into pose data
