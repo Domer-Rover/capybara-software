@@ -101,7 +101,7 @@
             publish_urdf: true # Publish a URDF model of the IMU and GNSS sensors attached to the camera frame
 
         gnss_fusion:
-            gnss_fusion_enabled: false # fuse 'sensor_msg/NavSatFix' message information into pose data
+            gnss_fusion_enabled: true # fuse 'sensor_msg/NavSatFix' message information into pose data
             gnss_fix_topic: '/fix' # Name of the GNSS topic of type NavSatFix to subscribe [Default: '/gps/fix']
             gnss_zero_altitude: false # Set to `true` to ignore GNSS altitude information
             h_covariance_mul: 1.0 # Multiplier factor to be applied to horizontal covariance of the received fix (plane X/Y)

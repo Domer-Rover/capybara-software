@@ -27,6 +27,12 @@ def generate_launch_description():
         description='Foxglove WebSocket port'
     )
 
+    use_joystick_arg = DeclareLaunchArgument(
+        'use_joystick',
+        default_value='false',
+        description='Use teleop_twist_joy (true) or teleop_twist_keyboard (false)'
+    )
+
     capybara_bringup_share = FindPackageShare('capybara_bringup')
 
     capybara_launch = IncludeLaunchDescription(
@@ -41,6 +47,7 @@ def generate_launch_description():
             'use_mock_hardware': LaunchConfiguration('use_mock_hardware'),
             'launch_rviz': 'false',
             'launch_zed': LaunchConfiguration('launch_zed'),
+            'use_joystick': LaunchConfiguration('use_joystick'),
         }.items()
     )
 
@@ -72,6 +79,7 @@ def generate_launch_description():
         use_mock_hardware_arg,
         launch_zed_arg,
         foxglove_port_arg,
+        use_joystick_arg,
         capybara_launch,
         foxglove_bridge,
         aruco_detector,

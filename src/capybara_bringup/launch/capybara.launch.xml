@@ -4,6 +4,7 @@
     <arg name="launch_rviz" default="true" />
     <arg name="launch_zed" default="true" />
     <arg name="launch_lidar" default="false" />
+    <arg name="use_joystick" default="false" description="Use teleop_twist_joy (true) or teleop_twist_keyboard (false)" />
 
     <!-- ==================== PATHS ==================== -->
     <let name="urdf_path"
@@ -56,5 +57,21 @@
     <group if="$(var launch_rviz)">
         <node pkg="rviz2" exec="rviz2" output="screen"
               args="-d $(var rviz_config_path)" />
+    </group>
+
+    <!-- ==================== TELEOP ==================== -->
+    <group if="$(var use_joystick)">
+        <node pkg="joy" exec="joy_node" name="joy_node" output="screen" />
+        <node pkg="teleop_twist_joy" exec="teleop_node" name="teleop_twist_joy" output="screen">
+            <param name="enable_button" value="4" />
+            <param name="axis_linear.x" value="1" />
+            <param name="axis_angular.yaw" value="3" />
+            <param name="scale_linear.x" value="0.5" />
+            <param name="scale_angular.yaw" value="1.0" />
+        </node>
+    </group>
+    <group unless="$(var use_joystick)">
+        <node pkg="teleop_twist_keyboard" exec="teleop_twist_keyboard" name="teleop_twist_keyboard"
+              output="screen" launch-prefix="xterm -e" />
     </group>
 </launch>

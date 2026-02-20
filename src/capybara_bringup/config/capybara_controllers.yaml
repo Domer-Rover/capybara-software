@@ -12,8 +12,8 @@ diff_drive_controller:
   ros__parameters:
     left_wheel_names: ["front_left_wheel_joint", "mid_left_wheel_joint", "rear_left_wheel_joint"]
     right_wheel_names: ["front_right_wheel_joint", "mid_right_wheel_joint", "rear_right_wheel_joint"]
-    wheel_separation: 0.762   # 30 inches — front/mid axle center-to-center (measured Feb 2026)
-    wheel_radius: 0.127       # 5 inches — including treads+rims (measured Feb 2026)
+    wheel_separation: 0.42285  # UPDATE after measuring track width center-to-center
+    wheel_radius: 0.13        # 13 cm radius
 
     # Multipliers for fine-tuning (1.0 = no adjustment)
     wheel_separation_multiplier: 1.0
@@ -39,16 +39,16 @@ diff_drive_controller:
 
     # ==================== VELOCITY/ACCELERATION LIMITS ====================
     linear.x.has_velocity_limits: true
-    linear.x.max_velocity: 0.15  # m/s — safe for outdoor grass testing with correct wheel_radius
-    linear.x.min_velocity: -0.15
+    linear.x.max_velocity: 0.5  # m/s (reduced for safety while tuning)
+    linear.x.min_velocity: -0.5
     linear.x.has_acceleration_limits: true
-    linear.x.max_acceleration: 0.2  # m/s^2 — reduced from 0.5: smooth ramp-up, no jerk
+    linear.x.max_acceleration: 0.4  # m/s^2
 
     angular.z.has_velocity_limits: true
-    angular.z.max_velocity: 0.4   # rad/s — conservative for 6WD on grass
-    angular.z.min_velocity: -0.4
+    angular.z.max_velocity: 1.0  # rad/s (reduced for safety while tuning)
+    angular.z.min_velocity: -1.0
     angular.z.has_acceleration_limits: true
-    angular.z.max_acceleration: 0.3  # rad/s^2 — reduced from 0.5: smooth turning
+    angular.z.max_acceleration: 0.7  # rad/s^2
 
 joint_state_broadcaster:
   ros__parameters:
