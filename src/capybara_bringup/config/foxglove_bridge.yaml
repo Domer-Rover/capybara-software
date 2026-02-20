@@ -59,16 +59,3 @@
             - '/diagnostics'
             - '/rosout'
 
-        # Per-topic QoS overrides.
-        # BEST_EFFORT for the camera: bridge won't wait for ACKs on image frames.
-        # Drops are fine — you always want the freshest frame, not a queued old one.
-        # RELIABLE publisher (ZED) + BEST_EFFORT subscriber (bridge) is valid in ROS2.
-        topic_qos_overrides:
-            - topic: '/zed/zed_node/left/image_rect_color/compressed'
-              reliability: best_effort
-              history: keep_last
-              depth: 1
-            - topic: '/zed/zed_node/point_cloud/cloud_registered'
-              reliability: best_effort
-              history: keep_last
-              depth: 1
