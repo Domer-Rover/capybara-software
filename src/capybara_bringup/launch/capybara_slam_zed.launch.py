@@ -86,12 +86,12 @@ def generate_launch_description():
         ],
         parameters=[{
             'target_frame':        'base_footprint',
-            'transform_tolerance': 0.01,
+            'transform_tolerance': 0.1,
             'min_height':          0.05,    # ignore ground plane (< 5 cm)
             'max_height':          0.60,    # capture obstacles up to 60 cm
             'angle_min':          -1.5708,  # ZED FOV is ~110° (not full 360°)
             'angle_max':           1.5708,
-            'angle_increment':     0.00873, # ~0.5° resolution
+            'angle_increment':     0.008720, # span/increment = 360.33 → ceil=361 (pointcloud) and round+1=361 (slam_toolbox)
             'scan_time':           0.033,   # 30 fps
             'range_min':           0.3,     # ZED2i min reliable depth
             'range_max':           5.0,     # practical outdoor obstacle range
@@ -101,19 +101,17 @@ def generate_launch_description():
         output='screen'
     )
 
-    # SLAM Toolbox — same config as LIDAR SLAM, reads /scan topic.
-    # Note: slam_toolbox.yaml sets max_laser_range: 12.0 m but the ZED scan
-    # tops out at 5.0 m — that is fine, slam_toolbox clips internally.
-    # Loop closure is less reliable than with LIDAR because the ZED FOV is
-    # ~110° (vs 360° for the STL-19P), so map quality degrades in long
-    # corridors or large open areas.
+    # SLAM Toolbox — uses slam_toolbox_zed.yaml (ZED-optimised: 5 m range,
+    # 0.2 m travel threshold).  Loop closure is less reliable than with LIDAR
+    # because the ZED FOV is ~110° (vs 360° for the STL-19P), so map quality
+    # degrades in long corridors or large open areas.
     slam_toolbox = Node(
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
         name='slam_toolbox',
         parameters=[
             PathJoinSubstitution([
-                capybara_bringup_share, 'config', 'slam_toolbox.yaml'
+                capybara_bringup_share, 'config', 'slam_toolbox_zed.yaml'
             ])
         ],
         output='screen'
