@@ -17,7 +17,10 @@ install(
 )
 
 install(
-  PROGRAMS scripts/aruco_detector.py
+  PROGRAMS
+    scripts/aruco_detector.py
+    scripts/yolov8_detector.py
+    scripts/yolov8_export_onnx.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
