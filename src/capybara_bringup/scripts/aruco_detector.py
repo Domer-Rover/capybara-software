@@ -2,10 +2,10 @@
 """Lightweight ArUco marker detector using OpenCV.
 
 Subscribes to the ZED left camera image and camera_info, detects ArUco
-markers (DICT_6X6_250), and publishes:
+markers (DICT_4X4_250), and publishes:
   - /aruco/markers        (PoseArray of all detected markers)
   - /aruco/marker_distance (visualization_msgs/Marker with distance text)
-  - /aruco/image_debug    (annotated image with drawn markers)
+  - /aruco/image_debug    (annotated image with drawn markers + light blue overlay)
 """
 
 import math
@@ -27,8 +27,8 @@ class ArucoDetector(Node):
 
         # Parameters
         self.declare_parameter('marker_size', 0.15)
-        self.declare_parameter('dictionary_id', 10)  # DICT_6X6_250
-        self.declare_parameter('camera_frame', 'zed_left_camera_optical_frame')
+        self.declare_parameter('dictionary_id', 2)  # DICT_4X4_250
+        self.declare_parameter('camera_frame', 'zed_left_camera_frame_optical')
 
         self.marker_size = self.get_parameter('marker_size').value
         dict_id = self.get_parameter('dictionary_id').value
@@ -64,7 +64,7 @@ class ArucoDetector(Node):
         self.debug_img_pub = self.create_publisher(Image, '/aruco/image_debug', 5)
 
         self.get_logger().info(
-            f'ArUco detector started (dict={dict_id}, size={self.marker_size}m)'
+            f'ArUco detector started (dict=DICT_4X4_250 [{dict_id}], size={self.marker_size}m)'
         )
 
     def _camera_info_cb(self, msg: CameraInfo):
@@ -135,8 +135,8 @@ class ArucoDetector(Node):
                 vis.lifetime.nanosec = 500000000  # 0.5s
                 self.marker_vis_pub.publish(vis)
 
-            # Draw markers on debug image
-            cv2.aruco.drawDetectedMarkers(cv_image, corners, ids)
+            # Draw light blue transparent overlay + ID/type labels on debug image
+            self._draw_marker_overlays(cv_image, corners, ids)
 
         self.pose_array_pub.publish(pose_array)
 
@@ -144,6 +144,58 @@ class ArucoDetector(Node):
         debug_msg = self.bridge.cv2_to_imgmsg(cv_image, encoding='bgr8')
         debug_msg.header = msg.header
         self.debug_img_pub.publish(debug_msg)
+
+    @staticmethod
+    def _draw_marker_overlays(image, corners, ids):
+        """Draw a light blue transparent square and ID/type label on each detected marker."""
+        # CSS lightblue #ADD8E6 = RGB(173,216,230) → OpenCV BGR(230,216,173)
+        LIGHT_BLUE_BGR = (230, 216, 173)
+        OVERLAY_ALPHA  = 0.35             # fill transparency (0=clear, 1=solid)
+        BORDER_COLOR   = (255, 200, 100)  # brighter blue border
+        TEXT_COLOR     = (255, 255, 255)  # white text
+        TEXT_BG_COLOR  = (180, 130,  60)  # darker blue label background
+
+        overlay = image.copy()
+
+        for i, marker_id in enumerate(ids.flatten()):
+            pts = corners[i][0].astype(np.int32)
+
+            # Filled polygon on overlay
+            cv2.fillPoly(overlay, [pts], LIGHT_BLUE_BGR)
+
+            # Border
+            cv2.polylines(image, [pts], isClosed=True, color=BORDER_COLOR, thickness=2)
+
+        # Blend overlay into original image
+        cv2.addWeighted(overlay, OVERLAY_ALPHA, image, 1 - OVERLAY_ALPHA, 0, image)
+
+        # Draw ID and type labels after blending so text stays sharp
+        for i, marker_id in enumerate(ids.flatten()):
+            pts = corners[i][0].astype(np.int32)
+
+            # Place label near the top-left corner of the marker
+            label = f'ID:{marker_id} [4X4]'
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.55
+            thickness = 2
+            (text_w, text_h), baseline = cv2.getTextSize(label, font, font_scale, thickness)
+
+            # Top-left corner of marker
+            tx, ty = int(pts[0][0]), int(pts[0][1])
+            pad = 3
+            # Background rectangle for text readability
+            cv2.rectangle(
+                image,
+                (tx, ty - text_h - pad * 2),
+                (tx + text_w + pad * 2, ty + baseline),
+                TEXT_BG_COLOR,
+                cv2.FILLED,
+            )
+            cv2.putText(
+                image, label,
+                (tx + pad, ty - pad),
+                font, font_scale, TEXT_COLOR, thickness, cv2.LINE_AA,
+            )
 
     @staticmethod
     def _rotation_matrix_to_quaternion(R):
