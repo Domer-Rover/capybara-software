@@ -115,7 +115,7 @@
         </inertial>
     </link>
 
-    <!-- ZED2i CAMERA LINK -->
+    <!-- ZED2i CAMERA LINK (named zed_camera_link to match ZED SDK v5 default camera_name='zed') -->
     <link name="zed_camera_link">
         <visual>
             <geometry>
@@ -243,11 +243,15 @@
         <origin xyz="0 0 ${base_height + 0.005}" rpy="0 0 0" />
     </joint>
 
-    <!-- ZED2i embedded in center of front panel, 3 in (0.0762 m) above chassis bottom -->
-    <joint name="camera_joint" type="fixed">
-        <parent link="base_link" />
-        <child link="zed_camera_link" />
-        <origin xyz="${base_length / 2.0} 0 0.0762" rpy="0 0 0" />
+    <!-- ZED SDK v5 zed_camera_link is the TF root (odom -> zed_camera_link published by ZED node).
+         base_footprint is now a child of zed_camera_link, at the inverse of the old mount offset.
+         Old mount base_link->(+0.3556, 0, +0.0762), base_joint->(0, 0, +0.127)
+         => camera was at (0.3556, 0, 0.2032) in base_footprint frame
+         => base_footprint is at (-0.3556, 0, -0.2032) in zed_camera_link frame -->
+    <joint name="camera_footprint_joint" type="fixed">
+        <parent link="zed_camera_link" />
+        <child link="base_footprint" />
+        <origin xyz="-${base_length / 2.0} 0 -${wheel_radius + 0.0762}" rpy="0 0 0" />
     </joint>
 
     <!-- LIDAR pole mounted center of chassis -->

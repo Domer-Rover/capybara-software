@@ -71,7 +71,7 @@ def generate_launch_description():
         parameters=[{
             'marker_size': 0.15,
             'dictionary_id': 10,
-            'camera_frame': 'zed_left_camera_optical_frame',
+            'camera_frame': 'zed_left_camera_frame_optical',
         }],
     )
 
