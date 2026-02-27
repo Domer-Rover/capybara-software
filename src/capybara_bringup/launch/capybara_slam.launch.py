@@ -21,6 +21,12 @@ def generate_launch_description():
         description='Foxglove WebSocket port'
     )
 
+    use_joystick_arg = DeclareLaunchArgument(
+        'use_joystick',
+        default_value='false',
+        description='Enable teleop_twist_joy joystick control'
+    )
+
     capybara_bringup_share = FindPackageShare('capybara_bringup')
 
     # Base robot launch (controllers, ZED, LIDAR, robot_state_publisher)
@@ -37,6 +43,7 @@ def generate_launch_description():
             'launch_rviz': 'false',
             'launch_zed': 'true',
             'launch_lidar': 'true',
+            'use_joystick': LaunchConfiguration('use_joystick'),
         }.items()
     )
 
@@ -68,24 +75,11 @@ def generate_launch_description():
         output='screen'
     )
 
-    # ArUco marker detection (OpenCV, DICT_6X6_250)
-    aruco_detector = Node(
-        package='capybara_bringup',
-        executable='aruco_detector.py',
-        name='aruco_detector',
-        output='screen',
-        parameters=[{
-            'marker_size': 0.15,
-            'dictionary_id': 10,
-            'camera_frame': 'zed_left_camera_frame_optical',
-        }],
-    )
-
     return LaunchDescription([
         use_mock_hardware_arg,
         foxglove_port_arg,
+        use_joystick_arg,
         capybara_launch,
         foxglove_bridge,
         slam_toolbox,
-        aruco_detector,
     ])

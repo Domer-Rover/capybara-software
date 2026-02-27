@@ -3,6 +3,8 @@
     <arg name="use_mock_hardware" default="true" />
     <arg name="launch_rviz" default="true" />
     <arg name="launch_zed" default="true" />
+    <arg name="launch_custom_od" default="false"
+         description="Load YOLOv8 ZED SDK custom OD config (601 classes, ~7200 ROS2 params - crashes on Jetson)" />
     <arg name="launch_lidar" default="false" />
     <arg name="use_joystick" default="false" description="Use teleop_twist_joy (true) or teleop_twist_keyboard (false)" />
     <arg name="launch_gps" default="false" description="Launch u-blox ZED-F9P GPS node (publishes /fix for ZED GNSS fusion)" />
@@ -31,34 +33,51 @@
     <node pkg="controller_manager" exec="spawner" args="diff_drive_controller" />
 
     <!-- ==================== ZED2i CAMERA ==================== -->
+    <!-- Two groups: one passes custom_object_detection_config_path, one does not. -->
+    <!-- <arg if="..."> is not valid in XML launch, so we use nested groups.       -->
     <group if="$(var launch_zed)">
-        <include file="$(find-pkg-share zed_wrapper)/launch/zed_camera.launch.py">
-            <arg name="camera_model" value="zed2i" />
-            <arg name="publish_urdf" value="true" />
-            <arg name="publish_tf" value="true" />
-            <arg name="publish_map_tf" value="false" />
-            <!-- Custom YOLOv8 ONNX object detection (water bottle + hammer) -->
-            <arg name="custom_object_detection_config_path"
-                 value="$(find-pkg-share capybara_bringup)/config/capybara_custom_od.yaml" />
-        </include>
+        <group if="$(var launch_custom_od)">
+            <include file="$(find-pkg-share zed_wrapper)/launch/zed_camera.launch.py">
+                <arg name="camera_model" value="zed2i" />
+                <arg name="publish_urdf" value="false" />
+                <arg name="publish_tf" value="true" />
+                <arg name="publish_map_tf" value="false" />
+                <arg name="custom_object_detection_config_path"
+                     value="$(find-pkg-share capybara_bringup)/config/capybara_custom_od.yaml" />
+            </include>
+        </group>
+        <group unless="$(var launch_custom_od)">
+            <include file="$(find-pkg-share zed_wrapper)/launch/zed_camera.launch.py">
+                <arg name="camera_model" value="zed2i" />
+                <arg name="publish_urdf" value="false" />
+                <arg name="publish_tf" value="true" />
+                <arg name="publish_map_tf" value="false" />
+            </include>
+        </group>
     </group>
 
-    <!-- ==================== LIDAR (STL-19P) ==================== -->
-    <!-- Used by capybara_slam.launch.py (launch_lidar:=true).           -->
-    <!-- Nav2 launches manage their own scan source:                      -->
-    <!--   capybara_nav2_simple.launch.py  — launches LIDAR directly      -->
-    <!--   capybara_nav2_zed.launch.py     — uses pointcloud_to_laserscan -->
+    <!-- ==================== LIDAR (LDRobot LD19 / D500 kit) ==================== -->
+    <!-- Used by capybara_slam.launch.py (launch_lidar:=true).                    -->
+    <!-- Nav2 launches manage their own scan source:                               -->
+    <!--   capybara_nav2_simple.launch.py  - launches LIDAR directly              -->
+    <!--   capybara_nav2_zed.launch.py     - uses pointcloud_to_laserscan         -->
+    <!-- D500 kit uses FTDI FT232R USB adapter; port is typically /dev/ttyUSB1    -->
+    <!-- (ttyUSB0 is taken by the motor FTDI). Adjust if enumeration differs.     -->
+    <!-- frame_id matches laser_frame in URDF — no extra static TF needed.        -->
     <group if="$(var launch_lidar)">
-        <node pkg="sllidar_ros2" exec="sllidar_node" name="sllidar_node" output="screen">
-            <param name="serial_port" value="/dev/ttyUSB0" />
-            <param name="serial_baudrate" value="38400" />
+        <node pkg="ldlidar_stl_ros2" exec="ldlidar_stl_ros2_node" name="LD19" output="screen">
+            <param name="product_name" value="LDLiDAR_LD19" />
+            <param name="topic_name" value="scan" />
             <param name="frame_id" value="laser_frame" />
-            <param name="scan_mode" value="Standard" />
+            <param name="port_name" value="/dev/ttyUSB1" />
+            <param name="port_baudrate" value="230400" />
+            <param name="laser_scan_dir" value="true" />
+            <param name="enable_angle_crop_func" value="false" />
         </node>
     </group>
 
     <!-- ==================== GPS (u-blox ZED-F9P via USB) ==================== -->
-    <!-- Publishes NavSatFix to /fix — ZED SDK fuses it via gnss_fusion_enabled.  -->
+    <!-- Publishes NavSatFix to /fix - ZED SDK fuses it via gnss_fusion_enabled.  -->
     <!-- Device is typically /dev/ttyACM0; adjust if it enumerates differently.   -->
     <group if="$(var launch_gps)">
         <node pkg="ublox_gps" exec="ublox_gps_node" name="gps" output="screen">
@@ -78,15 +97,16 @@
     </group>
 
     <!-- ==================== TELEOP ==================== -->
-    <!-- Keyboard teleop removed — use Foxglove Teleop panel to publish /cmd_vel -->
+    <!-- Keyboard teleop removed - use Foxglove Teleop panel to publish /cmd_vel -->
     <group if="$(var use_joystick)">
         <node pkg="joy" exec="joy_node" name="joy_node" output="screen" />
         <node pkg="teleop_twist_joy" exec="teleop_node" name="teleop_twist_joy" output="screen">
             <param name="enable_button" value="4" />
             <param name="axis_linear.x" value="1" />
-            <param name="axis_angular.yaw" value="3" />
-            <param name="scale_linear.x" value="0.5" />
+            <param name="axis_angular.yaw" value="0" />
+            <param name="scale_linear.x" value="0.2" />
             <param name="scale_angular.yaw" value="1.0" />
+            <remap from="cmd_vel" to="/diff_drive_controller/cmd_vel_unstamped" />
         </node>
     </group>
 </launch>

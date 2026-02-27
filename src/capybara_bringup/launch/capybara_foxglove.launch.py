@@ -62,19 +62,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # ArUco marker detection (OpenCV, DICT_6X6_250)
-    aruco_detector = Node(
-        package='capybara_bringup',
-        executable='aruco_detector.py',
-        name='aruco_detector',
-        output='screen',
-        parameters=[{
-            'marker_size': 0.15,
-            'dictionary_id': 10,
-            'camera_frame': 'zed_left_camera_frame_optical',
-        }],
-    )
-
     return LaunchDescription([
         use_mock_hardware_arg,
         launch_zed_arg,
@@ -82,5 +69,4 @@ def generate_launch_description():
         use_joystick_arg,
         capybara_launch,
         foxglove_bridge,
-        aruco_detector,
     ])

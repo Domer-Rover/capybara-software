@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Nav2 odom-only navigation with STL-19P LIDAR obstacle detection.
+"""Nav2 odom-only navigation with LD19 LIDAR obstacle detection.
 
 Navigates purely in the odom frame using ZED visual odometry.
 No SLAM map, no AMCL localization. Send goals relative to the odom origin.
-Requires the STL-19P LIDAR to be physically connected (/dev/ttyUSB0).
+Requires the LDRobot LD19 LIDAR to be physically connected (/dev/ttyUSB1).
 
 For LIDAR-free obstacle detection using ZED depth, use:
   capybara_nav2_zed.launch.py  (uses pointcloud_to_laserscan instead)
@@ -37,6 +37,12 @@ def generate_launch_description():
         description='Foxglove WebSocket port'
     )
 
+    use_joystick_arg = DeclareLaunchArgument(
+        'use_joystick',
+        default_value='false',
+        description='Enable teleop_twist_joy joystick control'
+    )
+
     capybara_bringup_share = FindPackageShare('capybara_bringup')
 
     nav2_params = PathJoinSubstitution([
@@ -54,6 +60,7 @@ def generate_launch_description():
             'use_mock_hardware': LaunchConfiguration('use_mock_hardware'),
             'launch_rviz': 'false',
             'launch_zed': 'true',
+            'use_joystick': LaunchConfiguration('use_joystick'),
         }.items()
     )
 
@@ -69,16 +76,19 @@ def generate_launch_description():
         output='screen'
     )
 
-    # STL-19P LIDAR — provides /scan for nav2 costmap obstacle detection
+    # LD19 LIDAR — provides /scan for nav2 costmap obstacle detection
     lidar_node = Node(
-        package='sllidar_ros2',
-        executable='sllidar_node',
-        name='sllidar_node',
+        package='ldlidar_stl_ros2',
+        executable='ldlidar_stl_ros2_node',
+        name='LD19',
         parameters=[{
-            'serial_port': '/dev/ttyUSB0',
-            'serial_baudrate': 38400,
+            'product_name': 'LDLiDAR_LD19',
+            'topic_name': 'scan',
             'frame_id': 'laser_frame',
-            'scan_mode': 'Standard',
+            'port_name': '/dev/ttyUSB1',
+            'port_baudrate': 230400,
+            'laser_scan_dir': True,
+            'enable_angle_crop_func': False,
         }],
         output='screen'
     )
@@ -135,33 +145,16 @@ def generate_launch_description():
         }],
     )
 
-    # ArUco marker detection (OpenCV, DICT_6X6_250)
-    aruco_detector = Node(
-        package='capybara_bringup',
-        executable='aruco_detector.py',
-        name='aruco_detector',
-        output='screen',
-        parameters=[{
-            'marker_size': 0.15,
-            'dictionary_id': 10,
-            'camera_frame': 'zed_left_camera_frame_optical',
-        }],
-    )
-
     return LaunchDescription([
         use_mock_hardware_arg,
         foxglove_port_arg,
-        # Robot base (controllers + ZED)
+        use_joystick_arg,
         capybara_launch,
         foxglove_bridge,
-        # LIDAR for obstacle detection
         lidar_node,
-        # Navigation (odom-only, no map/AMCL)
         controller_server,
         planner_server,
         behavior_server,
         bt_navigator,
         lifecycle_manager_navigation,
-        # ArUco detection
-        aruco_detector,
     ])

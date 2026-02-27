@@ -75,7 +75,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'marker_size': 0.15,
-            'dictionary_id': 10,
+            'dictionary_id': 2,  # DICT_4X4_250
             'camera_frame': 'zed_left_camera_frame_optical',
         }],
     )
@@ -86,9 +86,9 @@ def generate_launch_description():
         name='yolov8_detector',
         output='screen',
         parameters=[{
-            'model_path': '/home/jetsonson/capybara-software/models/yolov8n-oiv7.onnx',
-            'target_classes': ['Bottle', 'Hammer'],
-            'confidence_threshold': 0.40,
+            'model_path': '/home/jetsonson/capybara-software/models/yolov8n.pt',
+            'target_classes': ['bottle'],
+            'confidence_threshold': 0.25,
         }],
     )
 
