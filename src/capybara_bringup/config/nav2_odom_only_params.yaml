@@ -46,7 +46,7 @@ controller_server:
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 0.5  # matches angular max_velocity
+      rotate_to_heading_angular_vel: 0.8  # preferred angular velocity (rad/s)
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: true
       min_approach_linear_velocity: 0.05
@@ -96,7 +96,7 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 1.0
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.8   # matches angular max_velocity in capybara_controllers.yaml
+    max_rotational_vel: 1.0   # matches angular.z.max_velocity in capybara_controllers.yaml
     min_rotational_vel: 0.1
     rotational_acc_lim: 0.7   # matches angular max_acceleration in capybara_controllers.yaml
 
@@ -133,7 +133,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.40
+        inflation_radius: 0.60  # must exceed inscribed radius (0.549m)
       always_send_full_costmap: True
 
 local_costmap:
@@ -167,5 +167,5 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.45
+        inflation_radius: 0.60  # must exceed inscribed radius (0.549m)
       always_send_full_costmap: True

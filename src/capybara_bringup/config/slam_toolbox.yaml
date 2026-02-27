@@ -17,9 +17,10 @@ slam_toolbox:
     mode: mapping
 
     # Map update settings (tuned for real 360-degree LIDAR)
-    map_update_interval: 5.0
+    map_update_interval: 2.0
     resolution: 0.05
-    max_laser_range: 12.0             # STL-19P range ~12m
+    max_laser_range: 10.0             # LD19 max 12m, trim to reliable range in clutter
+    minimum_laser_range: 0.05         # LD19 min range ~0.02m, filter near-field noise
     minimum_time_interval: 0.5
     transform_timeout: 0.2
     tf_buffer_duration: 30.0
@@ -28,11 +29,11 @@ slam_toolbox:
     throttle_scans: 1
     enable_interactive_mode: true
 
-    # Scan matching - with 360 LIDAR we get full coverage per scan
+    # Scan matching - tighter thresholds for dense indoor environment
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.5      # full 360 coverage means fewer scans needed
-    minimum_travel_heading: 0.5
+    minimum_travel_distance: 0.2      # take scans more frequently in tight spaces
+    minimum_travel_heading: 0.2
 
     # Correlation search parameters
     correlation_search_space_dimension: 0.5

@@ -15,8 +15,8 @@
             - '/robot_description'
 
             # ── ZED left image (source for both detectors) ─────────────────
-            - '/zed/zed_node/left/image_rect_color'
-            - '/zed/zed_node/left/camera_info'
+            - '/zed/zed_node/rgb/color/rect/image'
+            - '/zed/zed_node/rgb/color/rect/camera_info'
 
             # ── ArUco marker detection ─────────────────────────────────────
             - '/aruco/image_debug'

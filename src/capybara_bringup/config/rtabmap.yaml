@@ -19,7 +19,11 @@ rtabmap:
     subscribe_odom_info: false    # not using rtabmap_odom, using ZED VIO directly
 
     # --- TF frames ---
-    frame_id: base_footprint
+    # ZED SDK 5.2 publishes odom→zed_camera_link (not odom→base_footprint).
+    # frame_id must match ZED's odom child_frame_id so RTAB-Map can correctly
+    # correlate the odometry with its visual loop closure. Nav2 reaches
+    # base_footprint via the static URDF joint: zed_camera_link→base_footprint.
+    frame_id: zed_camera_link
     odom_frame_id: odom
     map_frame_id: map
     publish_tf: true              # RTAB-Map publishes map→odom TF (replaces slam_toolbox)
