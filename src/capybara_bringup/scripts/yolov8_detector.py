@@ -4,17 +4,17 @@
 Subscribes to the ZED left camera image, runs YOLOv8 inference, and publishes:
   - /yolo/image_debug   (sensor_msgs/Image  – annotated image with bounding boxes)
 
-Default model: yolov8n-oiv7.onnx  (Open Images v7 – detects "Bottle" and "Hammer")
-Target classes default to ['Bottle', 'Hammer'] matching OIV7 class names.
+Default model: yolov8n.pt  (COCO 80 classes – detects 'bottle', 'person', etc.)
+Target classes default to ['bottle'] matching COCO class names (lowercase).
 
 Usage examples (ros2 run or launch arg):
-  # Water bottles + hammers (OIV7 model, default)
+  # Water bottles (COCO model, default)
   ros2 run capybara_bringup yolov8_detector
 
   # Custom classes / model
   ros2 run capybara_bringup yolov8_detector \
-    --ros-args -p model_path:=/path/to/model.onnx \
-               -p target_classes:="['Bottle','Hammer']"
+    --ros-args -p model_path:=/path/to/model.pt \
+               -p target_classes:="['bottle','person']"
 """
 
 import rclpy
@@ -35,8 +35,9 @@ except ImportError:
 
 # ── colour palette (BGR) – one colour per tracked class name ──────────────────
 _CLASS_COLORS = {
-    'Bottle':  (0, 200, 255),   # amber-orange  → water bottles (OIV7)
-    'Hammer':  (80,  80, 255),  # red           → hammers       (OIV7)
+    'bottle':  (0, 200, 255),   # amber-orange  → water bottles (COCO)
+    'person':  (255, 100,  50), # blue-ish      → people        (COCO)
+    'cup':     (50,  200,  50), # green         → cups          (COCO)
 }
 _DEFAULT_COLOR = (0, 255, 0)   # green for any other matched class
 
@@ -46,29 +47,33 @@ class Yolov8Detector(Node):
         super().__init__('yolov8_detector')
 
         # ── Parameters ────────────────────────────────────────────────────────
-        self.declare_parameter('model_path', '/home/jetsonson/capybara-software/models/yolov8n-oiv7.onnx')
-        self.declare_parameter('target_classes', ['Bottle', 'Hammer'])
-        self.declare_parameter('confidence_threshold', 0.40)
-        self.declare_parameter('image_topic', '/zed/zed_node/left/image_rect_color')
+        self.declare_parameter('model_path', '/home/jetsonson/capybara-software/models/yolov8n.pt')
+        self.declare_parameter('target_classes', ['bottle'])
+        self.declare_parameter('confidence_threshold', 0.25)
+        self.declare_parameter('image_topic', '/zed/zed_node/rgb/color/rect/image')
         self.declare_parameter('camera_frame', 'zed_left_camera_frame_optical')
+        self.declare_parameter('device', 'cuda')
 
         model_path = self.get_parameter('model_path').value
         self.target_classes: list = self.get_parameter('target_classes').value
         self.conf_thresh: float = self.get_parameter('confidence_threshold').value
         image_topic: str = self.get_parameter('image_topic').value
+        self.device: str = self.get_parameter('device').value
 
         # ── Load model ────────────────────────────────────────────────────────
         self.get_logger().info(f'Loading YOLOv8 model: {model_path}')
-        self.model = YOLO(model_path)
+        self.model = YOLO(model_path, task='detect')
         self.get_logger().info(
             f'Model loaded. Target classes: {self.target_classes}  '
-            f'(conf >= {self.conf_thresh})'
+            f'(conf >= {self.conf_thresh}, device={self.device})'
         )
 
         self._warn_missing_classes()
 
         # ── ROS2 I/O ──────────────────────────────────────────────────────────
         self.bridge = CvBridge()
+        self._frame_count = 0
+        self._encoding_logged = False
         qos = QoSProfile(depth=5, reliability=ReliabilityPolicy.BEST_EFFORT)
 
         self.create_subscription(Image, image_topic, self._image_cb, qos)
@@ -93,9 +98,38 @@ class Yolov8Detector(Node):
                 )
 
     def _image_cb(self, msg: Image):
-        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        self._frame_count += 1
 
-        results = self.model(cv_image, conf=self.conf_thresh, verbose=False)[0]
+        if not self._encoding_logged:
+            self.get_logger().info(
+                f'First image received: encoding={msg.encoding} '
+                f'size={msg.width}x{msg.height}'
+            )
+            self._encoding_logged = True
+
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        except Exception as e:
+            self.get_logger().error(f'cv_bridge conversion failed (encoding={msg.encoding}): {e}')
+            return
+
+        try:
+            results = self.model(cv_image, conf=self.conf_thresh, verbose=False, device=self.device)[0]
+        except Exception as e:
+            self.get_logger().error(f'YOLO inference failed: {e}')
+            return
+
+        # Log detections every time they occur, and periodically when nothing is found
+        detected = [self.model.names[int(b.cls[0])] for b in results.boxes
+                    if self.model.names[int(b.cls[0])] in self.target_classes]
+        if detected:
+            self.get_logger().info(f'DETECTED: {detected}')
+        elif self._frame_count % 30 == 0:
+            self.get_logger().info(
+                f'Frame {self._frame_count}: no detections '
+                f'(size={msg.width}x{msg.height}, targets={self.target_classes})'
+            )
+
         annotated = self._draw_detections(cv_image, results)
 
         out_msg = self.bridge.cv2_to_imgmsg(annotated, encoding='bgr8')

@@ -37,23 +37,33 @@ class ArucoDetector(Node):
         # ArUco setup
         self.aruco_dict = cv2.aruco.getPredefinedDictionary(dict_id)
         self.aruco_params = cv2.aruco.DetectorParameters()
+        self.aruco_params.adaptiveThreshWinSizeMin = 3
+        self.aruco_params.adaptiveThreshWinSizeMax = 53
+        self.aruco_params.adaptiveThreshWinSizeStep = 4
+        self.aruco_params.minMarkerPerimeterRate = 0.02
+        self.aruco_params.maxMarkerPerimeterRate = 4.0
+        self.aruco_params.polygonalApproxAccuracyRate = 0.04
+        self.aruco_params.minCornerDistanceRate = 0.05
+        self.aruco_params.perspectiveRemoveIgnoredMarginPerCell = 0.13
         self.detector = cv2.aruco.ArucoDetector(self.aruco_dict, self.aruco_params)
 
         self.bridge = CvBridge()
         self.camera_matrix = None
         self.dist_coeffs = None
+        self._frame_count = 0
+        self._encoding_logged = False
 
         # Subscribers
         qos = QoSProfile(depth=5, reliability=ReliabilityPolicy.BEST_EFFORT)
         self.create_subscription(
             CameraInfo,
-            '/zed/zed_node/left/camera_info',
+            '/zed/zed_node/rgb/color/rect/camera_info',
             self._camera_info_cb,
             qos,
         )
         self.create_subscription(
             Image,
-            '/zed/zed_node/left/image_rect_color',
+            '/zed/zed_node/rgb/color/rect/image',
             self._image_cb,
             qos,
         )
@@ -75,8 +85,22 @@ class ArucoDetector(Node):
 
     def _image_cb(self, msg: Image):
         if self.camera_matrix is None:
+            self._frame_count += 1
+            if self._frame_count % 30 == 1:
+                self.get_logger().warn(
+                    f'Waiting for camera_info ({self._frame_count} frames dropped) '
+                    f'— subscribed to /zed/zed_node/rgb/color/rect/camera_info'
+                )
             return
 
+        if not self._encoding_logged:
+            self.get_logger().info(
+                f'First image received: encoding={msg.encoding} '
+                f'size={msg.width}x{msg.height}'
+            )
+            self._encoding_logged = True
+
+        self._frame_count += 1
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         corners, ids, _ = self.detector.detectMarkers(cv_image)
 
@@ -137,6 +161,14 @@ class ArucoDetector(Node):
 
             # Draw light blue transparent overlay + ID/type labels on debug image
             self._draw_marker_overlays(cv_image, corners, ids)
+            self.get_logger().info(
+                f'DETECTED markers: {ids.flatten().tolist()}'
+            )
+        elif self._frame_count % 30 == 0:
+            self.get_logger().info(
+                f'Frame {self._frame_count}: no markers detected '
+                f'(size={msg.width}x{msg.height})'
+            )
 
         self.pose_array_pub.publish(pose_array)
 
