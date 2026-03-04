@@ -1,0 +1,72 @@
+# Capybara custom object detection configuration for the ZED SDK.
+#
+# Loaded by the ZED wrapper when detection_model is 'CUSTOM_YOLOLIKE_BOX_OBJECTS'.
+# The ONNX file is produced by running:
+#   ros2 run capybara_bringup yolov8_export_onnx.py
+# which exports yolov8n.pt → /home/jetsonson/capybara-software/models/yolov8n.onnx
+#
+# COCO class IDs referenced below:
+#   39 = bottle  (covers water bottles)
+#
+# For hammer detection, COCO does not include a hammer class.
+# Export and retrain with an Open Images v7 model (yolov8n-oiv7.pt) instead, then:
+#   1. Change custom_onnx_file to point to the oiv7 ONNX export
+#   2. Change custom_class_count to match the oiv7 class count
+#   3. Add a class_XXX entry with model_class_id matching the hammer class index
+
+/**:
+  ros__parameters:
+    object_detection:
+      # ── ONNX model ─────────────────────────────────────────────────────────
+      custom_onnx_file: '/home/jetsonson/capybara-software/models/yolov8n.onnx'
+      custom_onnx_input_size: 640   # YOLOv8 default export resolution (1x3x640x640)
+
+      # Number of classes in the ONNX file (80 for COCO yolov8n)
+      custom_class_count: 80
+
+      # ── Water bottle (COCO class 39) ────────────────────────────────────────
+      class_039:
+        label: 'water bottle'
+        model_class_id: 39
+        enabled: true
+        confidence_threshold: 50.0
+        is_grounded: true
+        is_static: false
+        tracking_timeout: -1.0
+        tracking_max_dist: -1.0
+        max_box_width_normalized: -1.0
+        min_box_width_normalized: -1.0
+        max_box_height_normalized: -1.0
+        min_box_height_normalized: -1.0
+        max_box_width_meters: -1.0
+        min_box_width_meters: -1.0
+        max_box_height_meters: -1.0
+        min_box_height_meters: -1.0
+        object_acceleration_preset: 'DEFAULT'
+        max_allowed_acceleration: 100000.0
+
+      # ── Hammer ──────────────────────────────────────────────────────────────
+      # Not present in COCO (yolov8n.pt). To enable:
+      #   1. Export yolov8n-oiv7.pt (Open Images v7) to ONNX
+      #   2. Update custom_onnx_file and custom_class_count above
+      #   3. Uncomment and set the correct model_class_id from the oiv7 label list
+      #
+      # class_NNN:
+      #   label: 'hammer'
+      #   model_class_id: 234  # find with: yolo task=detect model=yolov8n-oiv7.pt
+      #   enabled: true
+      #   confidence_threshold: 50.0
+      #   is_grounded: true
+      #   is_static: false
+      #   tracking_timeout: -1.0
+      #   tracking_max_dist: -1.0
+      #   max_box_width_normalized: -1.0
+      #   min_box_width_normalized: -1.0
+      #   max_box_height_normalized: -1.0
+      #   min_box_height_normalized: -1.0
+      #   max_box_width_meters: -1.0
+      #   min_box_width_meters: -1.0
+      #   max_box_height_meters: -1.0
+      #   min_box_height_meters: -1.0
+      #   object_acceleration_preset: 'DEFAULT'
+      #   max_allowed_acceleration: 100000.0

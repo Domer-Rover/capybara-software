@@ -1,0 +1,56 @@
+# rtabmap.yaml
+# RTAB-Map VSLAM configuration for ZED2i RGB-D input.
+#
+# Data flow:
+#   ZED RGB image + ZED depth map + ZED VIO odom → RTAB-Map → /map occupancy grid + map→odom TF
+#
+# RTAB-Map handles: visual feature extraction, loop closure, graph optimization
+# ZED SDK handles:  VIO (odom→base_footprint TF), depth computation (NEURAL_LIGHT)
+# Nav2 uses:        /map from RTAB-Map (global planner) + /scan from pointcloud_to_laserscan (costmaps)
+
+rtabmap:
+  ros__parameters:
+
+    # --- Input mode: RGB-D (ZED RGB image + ZED depth map) ---
+    subscribe_depth: true
+    subscribe_stereo: false
+    subscribe_rgb: true
+    subscribe_scan: false         # Nav2 gets /scan separately; don't give it to RTAB-Map
+    subscribe_odom_info: false    # not using rtabmap_odom, using ZED VIO directly
+
+    # --- TF frames ---
+    frame_id: base_footprint
+    odom_frame_id: odom
+    map_frame_id: map
+    publish_tf: true              # RTAB-Map publishes map→odom TF (replaces slam_toolbox)
+
+    # --- Synchronization ---
+    approx_sync: true             # ZED image and depth may not be perfectly timestamped
+    approx_sync_max_interval: 0.1 # allow up to 100ms skew between rgb and depth
+
+    queue_size: 10                # message queue; larger than 1 to handle Jetson compute bursts
+
+    # --- Map update triggers ---
+    Rtabmap/DetectionRate: "1"    # Hz for loop closure detection (1Hz is plenty)
+
+    RGBD/LinearUpdate: "0.1"      # add a new map node every 10cm of travel
+    RGBD/AngularUpdate: "0.1"     # add a new map node every ~5.7° of rotation
+    RGBD/ProximityBySpace: "true" # also trigger loop closure by spatial proximity
+
+    # --- Visual feature matching ---
+    Vis/MinInliers: "15"          # min matched features to accept a loop closure
+    Kp/MaxFeatures: "500"         # keypoints per frame — balance speed vs quality on Orin Nano
+    Kp/DetectorStrategy: "2"      # 2=ORB — fast, good for real-time on embedded hardware
+
+    # --- Occupancy grid (output to Nav2) ---
+    Grid/CellSize: "0.05"         # 5cm — matches Nav2 costmap resolution
+    Grid/RangeMax: "5.0"          # ZED2i practical depth range outdoors
+    Grid/3D: "false"              # 2D occupancy grid (not 3D point map)
+    Grid/FootprintRadius: "0.55"  # robot radius — clear cells under footprint
+
+    # --- Graph optimization ---
+    Optimizer/Strategy: "1"       # 1=g2o (accurate, faster than TORO, available in apt)
+    Mem/IncrementalMemory: "true" # online mapping mode
+    Mem/InitWMWithAllNodes: "true" # load all past nodes for loop closure (important for revisiting rooms)
+
+    use_sim_time: false

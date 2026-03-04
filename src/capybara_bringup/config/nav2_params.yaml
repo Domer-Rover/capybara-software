@@ -38,12 +38,12 @@ controller_server:
     FollowPath:
       # Regulated Pure Pursuit — simpler, lower CPU, better for outdoor point-to-point than DWB.
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.15
+      desired_linear_vel: 0.2
       lookahead_dist: 0.6
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 0.4
+      rotate_to_heading_angular_vel: 0.5
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: true
       min_approach_linear_velocity: 0.05
@@ -59,7 +59,7 @@ controller_server:
       use_rotate_to_heading: true
       allow_reversing: false
       rotate_to_heading_min_angle: 0.785
-      max_angular_accel: 0.3
+      max_angular_accel: 0.7
       max_robot_pose_search_dist: 10.0
 
 planner_server:
@@ -93,9 +93,9 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 1.0
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.5
+    max_rotational_vel: 0.8
     min_rotational_vel: 0.1
-    rotational_acc_lim: 0.5
+    rotational_acc_lim: 0.7
 
 global_costmap:
   global_costmap:
@@ -229,10 +229,10 @@ velocity_smoother:
     smoothing_frequency: 10.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.1, 0.0, 0.5]
-    min_velocity: [-0.1, 0.0, -0.5]
-    max_accel: [0.5, 0.0, 0.5]
-    max_decel: [-0.5, 0.0, -0.5]
+    max_velocity: [0.5, 0.0, 0.8]
+    min_velocity: [-0.5, 0.0, -0.8]
+    max_accel: [0.4, 0.0, 0.7]
+    max_decel: [-0.4, 0.0, -0.7]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
