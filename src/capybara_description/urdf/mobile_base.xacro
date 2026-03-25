@@ -3,8 +3,8 @@
 
     <!-- ROBOT DIMENSIONS (measured Feb 2026, all values in meters) -->
     <xacro:property name="base_length" value="0.7112" />      <!-- 28 inches -->
-    <xacro:property name="base_width"  value="0.508"  />      <!-- 20 inches -->
-    <xacro:property name="base_height" value="0.1524" />      <!-- 6 inches  -->
+    <xacro:property name="base_width"  value="0.465"  />      <!-- 46.5 cm -->
+    <xacro:property name="base_height" value="0.26"   />      <!-- 26 cm     -->
     <xacro:property name="base_mass"   value="6.8"    />      <!-- ~15 lbs estimate -->
 
     <!-- Wheel dimensions (5 in radius including treads+rims, 3.5 in thick) -->
@@ -13,8 +13,8 @@
     <xacro:property name="wheel_mass"   value="0.5"    />
 
     <!-- Track widths center-of-left-wheel to center-of-right-wheel -->
-    <xacro:property name="wheel_separation"      value="0.762"  />  <!-- 30 in — front + mid axles -->
-    <xacro:property name="rear_wheel_separation" value="0.9144" />  <!-- 36 in — rear axle (wider) -->
+    <xacro:property name="wheel_separation"      value="0.6985" />  <!-- 27.5 in — all axles same -->
+    <xacro:property name="rear_wheel_separation" value="0.6985" />  <!-- 27.5 in — same as front/mid -->
 
     <!-- Axle X positions (mid axle = chassis center; 18 in = 0.4572 m between each adjacent pair) -->
     <xacro:property name="front_axle_x" value="0.4572"  />    <!-- +18 inches from center -->
@@ -22,7 +22,8 @@
     <xacro:property name="rear_axle_x"  value="-0.4572" />    <!-- -18 inches from center -->
 
     <!-- LIDAR pole height from chassis top surface to LIDAR center -->
-    <xacro:property name="lidar_pole_height" value="0.0254" />  <!-- 1 inch above chassis -->
+    <!-- Total lidar height from ground = 24in (0.6096m) = wheel_radius(0.127) + base_height(0.26) + pole + lidar_body_offset(0.023) -->
+    <xacro:property name="lidar_pole_height" value="0.1996" />  <!-- puts lidar at 24in from ground -->
 
     <!-- Antenna heights measured from chassis bottom (two different antennas) -->
     <xacro:property name="left_antenna_height"  value="0.762"  />  <!-- 2.4 GHz — 30 inches, left rear -->
@@ -222,14 +223,13 @@
     </joint>
 
     <!-- ZED SDK v5 zed_camera_link is the TF root (odom -> zed_camera_link published by ZED node).
-         base_footprint is now a child of zed_camera_link, at the inverse of the old mount offset.
-         Old mount base_link->(+0.3556, 0, +0.0762), base_joint->(0, 0, +0.127)
-         => camera was at (0.3556, 0, 0.2032) in base_footprint frame
-         => base_footprint is at (-0.3556, 0, -0.2032) in zed_camera_link frame -->
+         base_footprint is now a child of zed_camera_link, at the inverse of the camera mount offset.
+         Camera is 16.5in (0.4191m) forward of chassis center, 18.5in (0.4699m) above ground.
+         => base_footprint (ground level) is at (-0.4191, 0, -0.4699) in zed_camera_link frame -->
     <joint name="camera_footprint_joint" type="fixed">
         <parent link="zed_camera_link" />
         <child link="base_footprint" />
-        <origin xyz="-${base_length / 2.0} 0 -${wheel_radius + 0.0762}" rpy="0 0 0" />
+        <origin xyz="-0.4191 0 -0.4699" rpy="0 0 0" />
     </joint>
 
     <!-- LIDAR pole mounted center of chassis -->

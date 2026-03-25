@@ -5,8 +5,8 @@
     <xacro:include filename="mobile_base.xacro" />
     <xacro:include filename="mobile_base.ros2_control.xacro" />
 
-    <!-- ZED2i camera: provides zed_camera_link + all optical frame static TF.
-         publish_urdf:=false in capybara.launch.xml keeps the ZED RSP off so this
+    <!-- ZED2i camera — provides zed_camera_link and all optical frame static TF.
+         publish_urdf set to false in capybara.launch.xml keeps the ZED RSP off so this
          single capybara RSP is the sole owner of all static transforms. -->
     <xacro:include filename="$(find zed_wrapper)/urdf/zed_macro.urdf.xacro" />
     <xacro:zed_camera name="zed" model="zed2i">
