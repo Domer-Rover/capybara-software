@@ -81,7 +81,7 @@
             publish_roi_mask: false # Advertise the ROI mask image topic that is published only if a node subscribes to it
 
         depth:
-            depth_mode: 'NEURAL' # Matches the ZED SDK setting: 'NONE', 'NEURAL_LIGHT', 'NEURAL', 'NEURAL_PLUS' - Note: if 'NONE' all the modules that requires depth extraction are disabled by default (Pos. Tracking, Obj. Detection, Mapping, ...)
+            depth_mode: 'NEURAL_LIGHT' # Matches the ZED SDK setting: 'NONE', 'NEURAL_LIGHT', 'NEURAL', 'NEURAL_PLUS' - Note: if 'NONE' all the modules that requires depth extraction are disabled by default (Pos. Tracking, Obj. Detection, Mapping, ...)
             depth_stabilization: 1 # Minimal stabilization — positional tracking active, avoids heavy temporal filtering overhead
             openni_depth_mode: false # 'false': 32bit float [meters], 'true': 16bit unsigned int [millimeters]
             point_cloud_freq: 10.0 # [DYNAMIC] Frequency of the pointcloud publishing. This value must be equal or less than the camera framerate.
@@ -109,7 +109,7 @@
             area_file_path: ''
             enable_localization_only: false
             save_area_memory_on_closing: false
-            reset_odom_with_loop_closure: true # DISABLED — odometry resets mid-nav cause "Pose Goes Off Grid" failures
+            reset_odom_with_loop_closure: false # odometry resets mid-nav cause "Pose Goes Off Grid" failures
             publish_3d_landmarks: false # Publish 3D landmarks used by the positional tracking algorithm
             publish_lm_skip_frame: 5 # Publish the landmarks every X frames to reduce bandwidth. Set to 0 to publish all landmarks
             depth_min_range: 0.3 # Exclude chassis/mount area directly in front of camera from visual tracking
