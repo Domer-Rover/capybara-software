@@ -236,3 +236,9 @@ _codeql_detected_source_root
 install/
 build/
 log/
+
+# Jetson system files (installed to /etc/systemd/system/, not tracked here)
+jetson_maxpower.service
+
+# Debian packages
+*.deb

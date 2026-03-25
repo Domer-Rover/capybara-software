@@ -19,8 +19,8 @@
             - '/zed/zed_node/odom'
             - '/zed/zed_node/pose/status'
 
-            # ── ZED camera feed — H.264 only (most efficient over WiFi) ────
-            - '/zed/zed_node/rgb/color/rect/image/ffmpeg'
+            # ── ZED camera feed — JPEG compressed (Foxglove-compatible, low bandwidth) ──
+            - '/zed/zed_node/rgb/color/rect/image/compressed'
             - '/zed/zed_node/rgb/color/rect/camera_info'
 
             # ── Drive controller ───────────────────────────────────────────

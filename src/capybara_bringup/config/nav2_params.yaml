@@ -26,12 +26,12 @@ controller_server:
 
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.05
-      movement_timeout: 15.0
+      required_movement_radius: 0.5
+      movement_timeout: 10.0
 
     general_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.15
+      xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
       stateful: True
 
@@ -43,8 +43,8 @@ controller_server:
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 0.8  # preferred angular velocity (rad/s)
-      transform_tolerance: 0.1
+      rotate_to_heading_angular_vel: 0.8
+      transform_tolerance: 0.5
       use_velocity_scaled_lookahead_dist: true
       min_approach_linear_velocity: 0.05
       approach_velocity_scaling_dist: 0.6
@@ -125,9 +125,9 @@ global_costmap:
           marking: True
           data_type: "LaserScan"
           raytrace_max_range: 10.0    # STL-19P LIDAR range
-          raytrace_min_range: 0.1
+          raytrace_min_range: 0.55
           obstacle_max_range: 10.0
-          obstacle_min_range: 0.15
+          obstacle_min_range: 0.55  # excludes robot body: chassis edges 0.36m, antennas 0.51m from lidar
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
@@ -159,9 +159,9 @@ local_costmap:
           marking: True
           data_type: "LaserScan"
           raytrace_max_range: 10.0    # STL-19P LIDAR range
-          raytrace_min_range: 0.1
+          raytrace_min_range: 0.55
           obstacle_max_range: 10.0
-          obstacle_min_range: 0.15
+          obstacle_min_range: 0.55  # excludes robot body: chassis edges 0.36m, antennas 0.51m from lidar
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
