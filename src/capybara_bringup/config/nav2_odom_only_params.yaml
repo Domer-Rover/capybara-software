@@ -9,6 +9,7 @@ bt_navigator:
     odom_topic: /zed/zed_node/odom
     bt_loop_duration: 10
     default_server_timeout: 20
+    transform_tolerance: 2.0  # wide tolerance: covers ZED TF startup delay (~1-2s after launch)
     navigators: ["navigate_to_pose", "navigate_through_poses"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator/NavigateToPoseNavigator"
@@ -40,12 +41,12 @@ controller_server:
       # Regulated Pure Pursuit — simpler, lower CPU, better for outdoor point-to-point than DWB.
       # No trajectory sampling: directly follows the global plan path.
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.15           # matches hardware max_velocity
+      desired_linear_vel: 0.2            # matches hardware max_velocity
       lookahead_dist: 0.6               # ~2ft ahead — appropriate for slow outdoor robot
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 0.4  # matches angular max_velocity
+      rotate_to_heading_angular_vel: 0.5  # matches angular max_velocity
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: true
       min_approach_linear_velocity: 0.05
@@ -61,7 +62,7 @@ controller_server:
       use_rotate_to_heading: true        # rotate in place to face goal before moving — natural for diff drive
       allow_reversing: false
       rotate_to_heading_min_angle: 0.785 # ~45°: rotate-in-place if heading error exceeds this
-      max_angular_accel: 0.3            # matches hardware angular max_acceleration
+      max_angular_accel: 0.7            # matches hardware angular max_acceleration
       max_robot_pose_search_dist: 10.0
 
 planner_server:
@@ -95,9 +96,9 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 1.0
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.4   # matches angular max_velocity in capybara_controllers.yaml
+    max_rotational_vel: 0.8   # matches angular max_velocity in capybara_controllers.yaml
     min_rotational_vel: 0.1
-    rotational_acc_lim: 0.3   # matches angular max_acceleration in capybara_controllers.yaml
+    rotational_acc_lim: 0.7   # matches angular max_acceleration in capybara_controllers.yaml
 
 # Both costmaps use odom frame with rolling windows — no static map needed.
 global_costmap:
@@ -144,8 +145,8 @@ local_costmap:
       robot_base_frame: base_footprint
       transform_tolerance: 1.0
       rolling_window: true
-      width: 5
-      height: 5
+      width: 8   # was 5 — robot navigates 5m, 5m window caused sensor origin to exit map at midpoint
+      height: 8
       resolution: 0.05
       robot_radius: 0.55              # rear wheels 36in apart → 0.457m from center + 0.044m half-width + safety margin
       plugins: ["obstacle_layer", "inflation_layer"]
@@ -159,9 +160,9 @@ local_costmap:
           clearing: True
           marking: True
           data_type: "LaserScan"
-          raytrace_max_range: 10.0    # STL-19P LIDAR range
+          raytrace_max_range: 5.0
           raytrace_min_range: 0.1
-          obstacle_max_range: 10.0
+          obstacle_max_range: 5.0
           obstacle_min_range: 0.15
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
