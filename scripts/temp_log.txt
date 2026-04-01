@@ -1,0 +1,5 @@
+Testing Baud Rate {BAUD_RATE} on Port: {PORT}Date: 2026-04-01
+[19:11:15] CPU Temp: 49.843 m°C, GPU Temp: 49.781 °C
+Motor Temps: [24.3, 25.1, 23.7] °C
+[19:11:20] CPU Temp: 49.437 m°C, GPU Temp: 49.718 °C
+Motor Temps: [24.3, 25.1, 23.6] °C
