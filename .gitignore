@@ -236,3 +236,7 @@ _codeql_detected_source_root
 install/
 build/
 log/
+
+# Claude
+.claude
+CLAUDE.md
