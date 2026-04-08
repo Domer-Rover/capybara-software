@@ -134,19 +134,7 @@ def generate_launch_description():
             ],
         }],
     )
-
-    # ArUco marker detection (OpenCV, DICT_6X6_250)
-    aruco_detector = Node(
-        package='capybara_bringup',
-        executable='aruco_detector.py',
-        name='aruco_detector',
-        output='screen',
-        parameters=[{
-            'marker_size': 0.15,
-            'dictionary_id': 10,
-            'camera_frame': 'zed_left_camera_frame_optical',
-        }],
-    )
+    
 
     return LaunchDescription([
         use_mock_hardware_arg,
@@ -162,6 +150,5 @@ def generate_launch_description():
         behavior_server,
         bt_navigator,
         lifecycle_manager_navigation,
-        # ArUco detection
-        aruco_detector,
+        # Future object-detection feature:  
     ])
