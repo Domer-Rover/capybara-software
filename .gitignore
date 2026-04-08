@@ -240,3 +240,6 @@ log/
 # Claude
 .claude
 CLAUDE.md
+
+# jetson max power file
+jetson_maxpower.service
