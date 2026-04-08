@@ -87,6 +87,7 @@
             <param name="axis_angular.yaw" value="3" />
             <param name="scale_linear.x" value="0.5" />
             <param name="scale_angular.yaw" value="1.0" />
+            <remap from="cmd_vel" to="/diff_drive_controller/cmd_vel_unstamped" />
         </node>
     </group>
 </launch>
