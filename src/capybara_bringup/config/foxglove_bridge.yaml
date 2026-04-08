@@ -10,8 +10,8 @@
     ros__parameters:
         address: '0.0.0.0'
         num_threads: 4
-        max_qos_depth: 1          # Keep only the latest message per topic — no frame queuing, no accumulated lag
-        send_buffer_limit: 10485760  # 10 MB: drop old frames instead of buffering them → real-time over Bullet WiFi
+        max_qos_depth: 1          # Latest message only — no frame queuing, no lag over WiFi
+        send_buffer_limit: 10485760  # 10 MB: drop old frames instead of buffering
 
         topic_whitelist:
             # ── Core transforms & robot model ──────────────────────────────
@@ -21,61 +21,31 @@
             - '/joint_states'
 
             # ── Drive controller ───────────────────────────────────────────
-            - '/diff_drive_controller/odom'
+            # cmd_vel_unstamped: what Nav2 (or teleop) is actually commanding
             - '/diff_drive_controller/cmd_vel_unstamped'
 
-            # ── ZED2i — camera, odometry, IMU, point cloud ─────────────────
-            - '/zed/joint_states'
-            - '/zed/zed_description'
-            - '/zed/zed_node/depth/camera_info'
-            - '/zed/zed_node/depth/depth_registered'
-            - '/zed/zed_node/depth/depth_registered/camera_info'
-            - '/zed/zed_node/depth/depth_registered/compressed'
-            - '/zed/zed_node/depth/depth_registered/compressedDepth'
-            - '/zed/zed_node/depth/depth_registered/ffmpeg'
-            - '/zed/zed_node/depth/depth_registered/theora'
-            - '/zed/zed_node/imu/data'
+            # ── ZED2i — video feed (compressed only), odometry, IMU ────────
+            # Use /compressed in Foxglove image panel — NOT the raw topic.
+            # Raw 1080p will saturate 2.4GHz instantly.
+            - '/zed/zed_node/left/image_rect_color/compressed'
             - '/zed/zed_node/left/camera_info'
-            - '/zed/zed_node/left/image_rect_color'
-            - '/zed/zed_node/obj_det/objects'
             - '/zed/zed_node/odom'
-            - '/zed/zed_node/point_cloud/cloud_registered'
-            - '/zed/zed_node/point_cloud/cloud_registered/draco'
-            - '/zed/zed_node/point_cloud/cloud_registered/zlib'
-            - '/zed/zed_node/point_cloud/cloud_registered/zstd'
             - '/zed/zed_node/pose'
-            - '/zed/zed_node/pose/status'
-            - '/zed/zed_node/rgb/color/rect/camera_info'
-            - '/zed/zed_node/rgb/color/rect/image'
-            - '/zed/zed_node/rgb/color/rect/image/camera_info'
-            - '/zed/zed_node/rgb/color/rect/image/compressed'
-            - '/zed/zed_node/rgb/color/rect/image/compressedDepth'
-            - '/zed/zed_node/rgb/color/rect/image/ffmpeg'
-            - '/zed/zed_node/rgb/color/rect/image/theora'
-            - '/zed/zed_node/status/health'
-            - '/zed/zed_node/status/heartbeat'
+            - '/zed/zed_node/imu/data'
 
-            # ── Obstacle detection (LIDAR or pointcloud_to_laserscan) ──────
+            # ── LIDAR ───────────────────────────────────────────────────────
             - '/scan'
 
-            # ── Navigation — goals, plans, costmaps, footprints ───────────
+            # ── Nav2 — goals, plans, costmaps, footprints, status ──────────
+            # These are all small/low-rate — safe to forward at full fidelity.
             - '/goal_pose'
             - '/plan'
             - '/local_plan'
             - '/local_costmap/costmap'
-            - '/local_costmap/costmap_updates'
             - '/local_costmap/published_footprint'
             - '/global_costmap/costmap'
-            - '/global_costmap/costmap_updates'
             - '/global_costmap/published_footprint'
             - '/navigate_to_pose/.*'
-
-            # ── SLAM map & AMCL localization ───────────────────────────────
-            - '/map'
-            - '/amcl_pose'
-
-            # ── ArUco marker detection ─────────────────────────────────────
-            - '/aruco/.*'
 
             # ── Diagnostics ────────────────────────────────────────────────
             - '/diagnostics'
