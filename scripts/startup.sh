@@ -32,7 +32,7 @@ fi
 
 # ── build workspace ────────────────────────────────────────────────────────────
 print_step "Building workspace (colcon)"
-if colcon build --symlink-install --packages-exclude zed_components zed_; then
+if colcon build --symlink-install; then
     print_ok "colcon build complete"
 else
     print_fail "colcon build failed"
