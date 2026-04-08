@@ -32,7 +32,7 @@ fi
 
 # ── build workspace ────────────────────────────────────────────────────────────
 print_step "Building workspace (colcon)"
-if colcon build --symlink-install; then
+if colcon build --symlink-install --packages-exclude zed_components zed_; then
     print_ok "colcon build complete"
 else
     print_fail "colcon build failed"
@@ -62,7 +62,8 @@ while true; do
     ros2 launch capybara_bringup capybara_foxglove.launch.py \
         use_mock_hardware:=false \
         launch_zed_arg:=false \
-        use_joystick_arg:=false
+        use_joystick_arg:=false \
+        > /dev/null
     EXIT_CODE=$?
 
     if [ $EXIT_CODE -eq 0 ]; then
