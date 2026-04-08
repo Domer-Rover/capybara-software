@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 Testing Baud Rate 38400 on Port: /dev/ttyUSB0
 Date: 2026-04-08
 [19:19:27] CPU Temp: 48.968 m°C, GPU Temp: 48.406 °C; GPU Load: 0.0
 Motor Temps: [[22.8, 22.7], [23.6, 23.7], [22.3, 22.3]] °C
 
+=======
+Testing Baud Rate {BAUD_RATE} on Port: {PORT}Date: 2026-04-01
+[19:11:15] CPU Temp: 49.843 m°C, GPU Temp: 49.781 °C
+Motor Temps: [24.3, 25.1, 23.7] °C
+[19:11:20] CPU Temp: 49.437 m°C, GPU Temp: 49.718 °C
+Motor Temps: [24.3, 25.1, 23.6] °C
+>>>>>>> refs/remotes/origin/davm_dev
