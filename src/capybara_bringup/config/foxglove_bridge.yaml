@@ -50,4 +50,4 @@
             # ── Diagnostics ────────────────────────────────────────────────
             - '/diagnostics'
             - '/rosout'
-
+            # in the future we add david's node's topics here too

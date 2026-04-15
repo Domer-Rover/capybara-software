@@ -3,7 +3,7 @@
 
 Navigates purely in the odom frame using ZED visual odometry.
 No SLAM map, no AMCL localization. Send goals relative to the odom origin.
-Requires the STL-19P LIDAR to be physically connected (/dev/ttyUSB0).
+Requires the STL-19P LIDAR to be physically connected (/dev/ttyUSB1).
 
 For LIDAR-free obstacle detection using ZED depth, use:
   capybara_nav2_zed.launch.py  (uses pointcloud_to_laserscan instead)
@@ -75,7 +75,7 @@ def generate_launch_description():
         executable='sllidar_node',
         name='sllidar_node',
         parameters=[{
-            'serial_port': '/dev/ttyUSB0',
+            'serial_port': '/dev/ttyUSB1',
             'serial_baudrate': 38400,
             'frame_id': 'laser_frame',
             'scan_mode': 'Standard',
