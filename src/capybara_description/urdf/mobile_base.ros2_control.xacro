@@ -19,6 +19,8 @@
                 <param name="serial_port">/dev/ttyUSB0</param>
                 <!-- Duty cycle mode - bypasses velocity PID, no encoders needed -->
                 <param name="use_duty_cycle">true</param>
+                <!-- Rear wheel boost during turns (1.0 = disabled, 1.25 = 25% more duty) -->
+                <param name="rear_turn_boost">1.25</param>
             </hardware>
         </xacro:unless>
 

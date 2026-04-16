@@ -7,9 +7,17 @@ bt_navigator:
     global_frame: odom
     robot_base_frame: base_footprint
     odom_topic: /zed/zed_node/odom
-    bt_loop_duration: 10
-    default_server_timeout: 20
     transform_tolerance: 2.0  # wide tolerance: covers ZED TF startup delay (~1-2s after launch)
+    filter_duration: 0.3
+    default_server_timeout: 20
+    default_cancel_timeout: 50
+    introspection_mode: "disabled"
+    always_reload_bt_xml: false
+    bt_log_idle_transitions: false
+    goal_blackboard_id: goal
+    goals_blackboard_id: goals
+    path_blackboard_id: path
+    waypoint_statuses_blackboard_id: waypoint_statuses
     navigators: ["navigate_to_pose", "navigate_through_poses"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator/NavigateToPoseNavigator"
