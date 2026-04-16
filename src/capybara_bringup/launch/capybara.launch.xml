@@ -41,10 +41,10 @@
     </group>
 
     <!-- ==================== LIDAR (LD19) ==================== -->
-    <!-- Used by capybara_slam.launch.py (launch_lidar:=true).           -->
-    <!-- Nav2 launches manage their own scan source:                      -->
-    <!--   capybara_nav2_simple.launch.py  — launches LIDAR directly      -->
-    <!--   capybara_nav2_zed.launch.py     — uses pointcloud_to_laserscan -->
+    <!-- Used by capybara_slam.launch.py (launch_lidar:=true).            -->
+    <!-- Nav2 scan sourcing is launch-file-specific in this repository:   -->
+    <!--   capybara_nav2_simple.launch.py launches its own lidar driver   -->
+    <!--   capybara_nav2_zed.launch.py is archived (not a normal launch)  -->
     <group if="$(var launch_lidar)">
         <node pkg="ldlidar_stl_ros2" exec="ldlidar_stl_ros2_node" name="ldlidar_node" output="screen">
             <param name="product_name" value="LDLiDAR_LD19" />
