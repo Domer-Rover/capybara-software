@@ -6,7 +6,7 @@ No SLAM map, no AMCL localization. Send goals relative to the odom origin.
 Requires the STL-19P LIDAR to be physically connected (/dev/ttyUSB1).
 
 For LIDAR-free obstacle detection using ZED depth, use:
-  capybara_nav2_zed.launch.py  (uses pointcloud_to_laserscan instead)
+  archive/capybara_nav2_zed.launch.py  (uses pointcloud_to_laserscan instead)
 
 Usage:
   ros2 launch capybara_bringup capybara_nav2_simple.launch.py use_mock_hardware:=false
