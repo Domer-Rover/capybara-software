@@ -2,7 +2,7 @@ bt_navigator:
   ros__parameters:
     global_frame: map
     robot_base_frame: base_footprint
-    odom_topic: /odom
+    odom_topic: /zed/zed_node/odom
     bt_loop_duration: 10
     default_server_timeout: 20
     navigators: ["navigate_to_pose", "navigate_through_poses"]
@@ -95,7 +95,7 @@ behavior_server:
     simulate_ahead_time: 2.0
     max_rotational_vel: 0.8
     min_rotational_vel: 0.1
-    rotational_acc_lim: 0.7
+    rotational_acc_lim: 0.4
 
 global_costmap:
   global_costmap:
@@ -124,7 +124,7 @@ global_costmap:
           clearing: True
           marking: True
           data_type: "LaserScan"
-          raytrace_max_range: 10.0    # STL-19P LIDAR range
+          raytrace_max_range: 10.0    # LD19 LIDAR range
           raytrace_min_range: 0.1
           obstacle_max_range: 10.0
           obstacle_min_range: 0.15
@@ -158,14 +158,14 @@ local_costmap:
           clearing: True
           marking: True
           data_type: "LaserScan"
-          raytrace_max_range: 10.0    # STL-19P LIDAR range
+          raytrace_max_range: 10.0    # LD19 LIDAR range
           raytrace_min_range: 0.1
           obstacle_max_range: 10.0
           obstacle_min_range: 0.15
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.45
+        inflation_radius: 0.40
       always_send_full_costmap: True
 
 amcl:
@@ -183,7 +183,7 @@ amcl:
     global_frame_id: "map"
     lambda_short: 0.1
     laser_likelihood_max_dist: 2.0
-    laser_max_range: 12.0            # STL-19P LIDAR range
+    laser_max_range: 12.0            # LD19 LIDAR range
     laser_min_range: 0.15
     laser_model_type: "likelihood_field"
     max_beams: 60                    # more beams with real 360 LIDAR
@@ -231,8 +231,8 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     max_velocity: [0.5, 0.0, 0.8]
     min_velocity: [-0.5, 0.0, -0.8]
-    max_accel: [0.4, 0.0, 0.7]
-    max_decel: [-0.4, 0.0, -0.7]
+    max_accel: [0.4, 0.0, 0.4]
+    max_decel: [-0.4, 0.0, -0.4]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
