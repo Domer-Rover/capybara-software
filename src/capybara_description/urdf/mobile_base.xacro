@@ -21,8 +21,6 @@
     <xacro:property name="mid_axle_x"   value="0.0"     />
     <xacro:property name="rear_axle_x"  value="-0.4572" />    <!-- -18 inches from center -->
 
-    <!-- LIDAR pole height from chassis top surface to LIDAR center -->
-    <xacro:property name="lidar_pole_height" value="0.508" />  <!-- 20 inches -->
 
     <!-- Antenna heights measured from chassis bottom (two different antennas) -->
     <xacro:property name="left_antenna_height"  value="0.762"  />  <!-- 2.4 GHz — 30 inches, left rear -->
@@ -93,28 +91,6 @@
     <xacro:wheel_link prefix="rear_left" />
     <xacro:wheel_link prefix="rear_right" />
 
-    <!-- IMU LINK (ZED2i internal IMU) -->
-    <link name="imu_link">
-        <visual>
-            <geometry>
-                <box size="0.03 0.03 0.01" />
-            </geometry>
-            <origin xyz="0 0 0" rpy="0 0 0" />
-            <material name="green">
-                <color rgba="0 1 0 1" />
-            </material>
-        </visual>
-        <collision>
-            <geometry>
-                <box size="0.03 0.03 0.01" />
-            </geometry>
-        </collision>
-        <inertial>
-            <mass value="0.01" />
-            <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
-        </inertial>
-    </link>
-
     <!-- ZED2i CAMERA LINK (named zed_camera_link to match ZED SDK v5 default camera_name='zed') -->
     <link name="zed_camera_link">
         <visual>
@@ -133,26 +109,6 @@
         </collision>
         <inertial>
             <mass value="0.175" />
-            <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
-        </inertial>
-    </link>
-
-    <!-- LIDAR POLE (visual only, for collision awareness) -->
-    <link name="lidar_pole_link">
-        <visual>
-            <geometry>
-                <cylinder radius="0.01" length="${lidar_pole_height}" />
-            </geometry>
-            <origin xyz="0 0 0" rpy="0 0 0" />
-            <material name="grey" />
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder radius="0.01" length="${lidar_pole_height}" />
-            </geometry>
-        </collision>
-        <inertial>
-            <mass value="0.1" />
             <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
         </inertial>
     </link>
@@ -236,13 +192,6 @@
     <xacro:wheel_joint prefix="rear_left" x_pos="${rear_axle_x}" y_offset="${rear_wheel_separation / 2.0}" />
     <xacro:wheel_joint prefix="rear_right" x_pos="${rear_axle_x}" y_offset="${-rear_wheel_separation / 2.0}" />
 
-    <!-- IMU centered on top of chassis -->
-    <joint name="imu_joint" type="fixed">
-        <parent link="base_link" />
-        <child link="imu_link" />
-        <origin xyz="0 0 ${base_height + 0.005}" rpy="0 0 0" />
-    </joint>
-
     <!-- ZED SDK v5 zed_camera_link is the TF root (odom -> zed_camera_link published by ZED node).
          base_footprint is now a child of zed_camera_link, at the inverse of the old mount offset.
          Old mount base_link->(+0.3556, 0, +0.0762), base_joint->(0, 0, +0.127)
@@ -254,18 +203,11 @@
         <origin xyz="-${base_length / 2.0} 0 -${wheel_radius + 0.0762}" rpy="0 0 0" />
     </joint>
 
-    <!-- LIDAR pole mounted center of chassis -->
-    <joint name="lidar_pole_joint" type="fixed">
-        <parent link="base_link" />
-        <child link="lidar_pole_link" />
-        <origin xyz="0 0 ${base_height + lidar_pole_height / 2.0}" rpy="0 0 0" />
-    </joint>
-
-    <!-- LIDAR on top of pole -->
+    <!-- LIDAR sitting directly on chassis top (no pole yet — placeholder until pole is fabricated) -->
     <joint name="lidar_joint" type="fixed">
         <parent link="base_link" />
         <child link="laser_frame" />
-        <origin xyz="0 0 ${base_height + lidar_pole_height + 0.023}" rpy="0 0 0" />
+        <origin xyz="0 0 ${base_height + 0.023}" rpy="0 0 0" />
     </joint>
 
     <!-- 2.4 GHz antenna left side of back face, base at chassis bottom, rising upward -->
