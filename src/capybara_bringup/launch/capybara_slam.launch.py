@@ -15,6 +15,18 @@ def generate_launch_description():
         description='Use mock hardware for simulation'
     )
 
+    launch_zed_arg = DeclareLaunchArgument(
+        'launch_zed',
+        default_value='true',
+        description='Launch ZED2i camera'
+    )
+
+    use_joystick_arg = DeclareLaunchArgument(
+        'use_joystick',
+        default_value='false',
+        description='Use teleop_twist_joy (true) or teleop_twist_keyboard (false). Not both.'
+    )
+
     foxglove_port_arg = DeclareLaunchArgument(
         'foxglove_port',
         default_value='8765',
@@ -35,8 +47,9 @@ def generate_launch_description():
         launch_arguments={
             'use_mock_hardware': LaunchConfiguration('use_mock_hardware'),
             'launch_rviz': 'false',
-            'launch_zed': 'true',
+            'launch_zed': LaunchConfiguration('launch_zed'),
             'launch_lidar': 'true',
+            'use_joystick': LaunchConfiguration('use_joystick'),
         }.items()
     )
 
@@ -83,6 +96,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         use_mock_hardware_arg,
+        launch_zed_arg,
+        use_joystick_arg,
         foxglove_port_arg,
         capybara_launch,
         foxglove_bridge,
