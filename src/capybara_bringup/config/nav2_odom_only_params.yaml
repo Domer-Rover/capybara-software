@@ -59,7 +59,7 @@ controller_server:
       use_cost_regulated_linear_velocity_scaling: false
       regulated_linear_scaling_min_radius: 0.9
       regulated_linear_scaling_min_speed: 0.25
-      use_rotate_to_heading: true        # rotate in place to face goal before moving — natural for diff drive
+      use_rotate_to_heading: false       # disabled: rover struggles to rotate in place due to weight distribution
       allow_reversing: false
       rotate_to_heading_min_angle: 0.785 # ~45°: rotate-in-place if heading error exceeds this
       max_angular_accel: 0.7            # matches hardware angular max_acceleration

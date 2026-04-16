@@ -1,8 +1,8 @@
 <launch>
     <!-- ==================== ARGUMENTS ==================== -->
     <arg name="use_mock_hardware" default="true" />
-    <arg name="launch_rviz" default="true" />
-    <arg name="launch_zed" default="true" />
+    <arg name="launch_rviz" default="false" />
+    <arg name="launch_zed" default="false" />
     <arg name="launch_lidar" default="false" />
     <arg name="use_joystick" default="false" description="Use teleop_twist_joy (true) or teleop_twist_keyboard (false)" />
     <arg name="launch_gps" default="false" description="Launch u-blox ZED-F9P GPS node (publishes /fix for ZED GNSS fusion)" />
@@ -50,7 +50,7 @@
     <!--   capybara_nav2_zed.launch.py     — uses pointcloud_to_laserscan -->
     <group if="$(var launch_lidar)">
         <node pkg="sllidar_ros2" exec="sllidar_node" name="sllidar_node" output="screen">
-            <param name="serial_port" value="/dev/ttyUSB0" />
+            <param name="serial_port" value="/dev/ttyUSB1" />
             <param name="serial_baudrate" value="38400" />
             <param name="frame_id" value="laser_frame" />
             <param name="scan_mode" value="Standard" />
@@ -59,7 +59,7 @@
 
     <!-- ==================== GPS (u-blox ZED-F9P via USB) ==================== -->
     <!-- Publishes NavSatFix to /fix — ZED SDK fuses it via gnss_fusion_enabled.  -->
-    <!-- Device is typically /dev/ttyACM0; adjust if it enumerates differently.   -->
+    <!-- Device is /dev/ttyACM0 (u-blox ZED-F9P confirmed).   -->
     <group if="$(var launch_gps)">
         <node pkg="ublox_gps" exec="ublox_gps_node" name="gps" output="screen">
             <param name="device" value="/dev/ttyACM0" />
@@ -78,13 +78,13 @@
     </group>
 
     <!-- ==================== TELEOP ==================== -->
-    <!-- Keyboard teleop removed — use Foxglove Teleop panel to publish /cmd_vel -->
+    <!-- Keyboard teleop removed — use Foxglove Teleop panel to publish /diff_drive_controller/cmd_vel_unstamped -->
     <group if="$(var use_joystick)">
         <node pkg="joy" exec="joy_node" name="joy_node" output="screen" />
         <node pkg="teleop_twist_joy" exec="teleop_node" name="teleop_twist_joy" output="screen">
             <param name="enable_button" value="4" />
             <param name="axis_linear.x" value="1" />
-            <param name="axis_angular.yaw" value="3" />
+            <param name="axis_angular.yaw" value="0" />
             <param name="scale_linear.x" value="0.5" />
             <param name="scale_angular.yaw" value="1.0" />
             <remap from="cmd_vel" to="/diff_drive_controller/cmd_vel_unstamped" />
