@@ -53,8 +53,8 @@
             <param name="port_baudrate" value="230400" />
             <param name="laser_scan_dir" value="true" />
             <param name="enable_angle_crop_func" value="true" />
-            <param name="angle_crop_min" value="90.0" />
-            <param name="angle_crop_max" value="270.0" />
+            <param name="angle_crop_min" value="270.0" />
+            <param name="angle_crop_max" value="90.0" />
             <param name="frame_id" value="laser_frame" />
         </node>
     </group>
