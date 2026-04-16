@@ -48,6 +48,12 @@
             - '/global_costmap/published_footprint'
             - '/navigate_to_pose/.*'
 
+            # ── SLAM Toolbox ────────────────────────────────────────────────
+            - '/map'
+            - '/map_metadata'
+            - '/slam_toolbox/scan_visualization'
+            - '/slam_toolbox/pose'
+
             # ── Diagnostics ────────────────────────────────────────────────
             - '/diagnostics'
             - '/rosout'
