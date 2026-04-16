@@ -13,7 +13,7 @@ diff_drive_controller:
     left_wheel_names: ["front_left_wheel_joint", "mid_left_wheel_joint", "rear_left_wheel_joint"]
     right_wheel_names: ["front_right_wheel_joint", "mid_right_wheel_joint", "rear_right_wheel_joint"]
     wheel_separation: 0.42285  # UPDATE after measuring track width center-to-center
-    wheel_radius: 0.13        # 13 cm radius
+    wheel_radius: 0.127       # 5 inches — matches URDF measured value
 
     # Multipliers for fine-tuning (1.0 = no adjustment)
     wheel_separation_multiplier: 1.0

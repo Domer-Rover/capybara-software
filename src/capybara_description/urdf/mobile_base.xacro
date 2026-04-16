@@ -207,7 +207,8 @@
     <joint name="lidar_joint" type="fixed">
         <parent link="base_link" />
         <child link="laser_frame" />
-        <origin xyz="0 0 ${base_height + 0.023}" rpy="0 0 0" />
+        <!-- 180 deg yaw because the sensor is mounted backwards relative to robot-forward. -->
+        <origin xyz="0 0 ${base_height + 0.023}" rpy="0 0 ${pi}" />
     </joint>
 
     <!-- 2.4 GHz antenna left side of back face, base at chassis bottom, rising upward -->

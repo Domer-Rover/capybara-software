@@ -40,17 +40,20 @@
         </include>
     </group>
 
-    <!-- ==================== LIDAR (STL-19P) ==================== -->
-    <!-- Used by capybara_slam.launch.py (launch_lidar:=true).           -->
-    <!-- Nav2 launches manage their own scan source:                      -->
-    <!--   capybara_nav2_simple.launch.py  — launches LIDAR directly      -->
-    <!--   capybara_nav2_zed.launch.py     — uses pointcloud_to_laserscan -->
+    <!-- ==================== LIDAR (LD19) ==================== -->
+    <!-- Used by capybara_slam.launch.py (launch_lidar:=true).            -->
+    <!-- Nav2 scan sourcing is launch-file-specific in this repository:   -->
+    <!--   capybara_nav2_simple.launch.py launches its own lidar driver   -->
+    <!--   capybara_nav2_zed.launch.py is archived (not a normal launch)  -->
     <group if="$(var launch_lidar)">
-        <node pkg="sllidar_ros2" exec="sllidar_node" name="sllidar_node" output="screen">
-            <param name="serial_port" value="/dev/ttyUSB1" />
-            <param name="serial_baudrate" value="38400" />
+        <node pkg="ldlidar_stl_ros2" exec="ldlidar_stl_ros2_node" name="ldlidar_node" output="screen">
+            <param name="product_name" value="LDLiDAR_LD19" />
+            <param name="topic_name" value="scan" />
+            <param name="port_name" value="/dev/ttyUSB1" />
+            <param name="port_baudrate" value="230400" />
+            <param name="laser_scan_dir" value="true" />
+            <param name="enable_angle_crop_func" value="false" />
             <param name="frame_id" value="laser_frame" />
-            <param name="scan_mode" value="Standard" />
         </node>
     </group>
 
