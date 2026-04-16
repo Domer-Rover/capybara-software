@@ -60,8 +60,7 @@ while true; do
     echo -e "\n${BOLD}--- Launch attempt #${LAUNCH_COUNT} ---${NC}"
 
     ros2 launch capybara_bringup capybara_foxglove.launch.py \
-    use_joystick:=false use_mock_hardware:=false      \
-	launch_rviz:=false launch_zed:=true
+    use_joystick:=true
     EXIT_CODE=$?
 
     if [ $EXIT_CODE -eq 0 ]; then

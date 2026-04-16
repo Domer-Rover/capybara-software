@@ -37,9 +37,6 @@
             <arg name="publish_urdf" value="true" />
             <arg name="publish_tf" value="true" />
             <arg name="publish_map_tf" value="false" />
-            <!-- Custom YOLOv8 ONNX object detection (water bottle + hammer) -->
-            <arg name="custom_object_detection_config_path"
-                 value="$(find-pkg-share capybara_bringup)/config/capybara_custom_od.yaml" />
         </include>
     </group>
 
@@ -79,6 +76,8 @@
 
     <!-- ==================== TELEOP ==================== -->
     <!-- Keyboard teleop removed — use Foxglove Teleop panel to publish /diff_drive_controller/cmd_vel_unstamped -->
+    <!-- NOTE: When reversing, turning feels inverted (push left = curves right from driver's view).
+         This is normal differential drive behavior — angular.z is robot-centric, not driver-centric. -->
     <group if="$(var use_joystick)">
         <node pkg="joy" exec="joy_node" name="joy_node" output="screen" />
         <node pkg="teleop_twist_joy" exec="teleop_node" name="teleop_twist_joy" output="screen">
