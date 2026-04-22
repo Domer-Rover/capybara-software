@@ -82,3 +82,10 @@ if __name__ == "__main__":
                     log_file.write(f"Motor Temps: {motor_temps} °C\n\n")
 
                     time.sleep(wait_time)
+
+# Skip workspace tutorial, use own workspace (capybara software)
+# colcon build --symlink-install
+# source install/setup.bash
+# Need command to launch, and command to make it ROS file
+# ros2 launch capybara_bringup (launchfile name) (argument:=true/false)
+# Create new ros2 package: 
