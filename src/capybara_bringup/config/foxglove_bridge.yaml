@@ -10,7 +10,7 @@
     ros__parameters:
         address: '0.0.0.0'
         num_threads: 4
-        max_qos_depth: 10         # tf_static needs depth > 1 (TRANSIENT_LOCAL, multi-message)
+        max_qos_depth: 20         # tf_static needs depth > 1 (TRANSIENT_LOCAL, multi-message)
         send_buffer_limit: 10485760  # 10 MB: drop old frames instead of buffering
 
         topic_whitelist:
