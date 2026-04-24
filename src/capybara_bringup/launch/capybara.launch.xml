@@ -45,17 +45,22 @@
     <!-- includes this file with launch_lidar:=true.                 -->
     <!-- LD06 and LD19 share the same sensor core, protocol, and     -->
     <!-- baudrate (230400) — only the product_name string differs.   -->
+    <!-- Driver publishes raw scan to /scan_raw; laser_filters node  -->
+    <!-- crops to front 180° and republishes to /scan. Driver's own  -->
+    <!-- enable_angle_crop_func is unreliable across versions.       -->
     <group if="$(var launch_lidar)">
         <node pkg="ldlidar_stl_ros2" exec="ldlidar_stl_ros2_node" name="ldlidar_node" output="screen">
             <param name="product_name" value="LDLiDAR_LD06" />
-            <param name="topic_name" value="scan" />
+            <param name="topic_name" value="scan_raw" />
             <param name="port_name" value="/dev/ttyUSB1" />
             <param name="port_baudrate" value="230400" />
             <param name="laser_scan_dir" value="true" />
-            <param name="enable_angle_crop_func" value="true" />
-            <param name="angle_crop_min" value="270.0" />
-            <param name="angle_crop_max" value="90.0" />
             <param name="frame_id" value="laser_frame" />
+        </node>
+        <node pkg="laser_filters" exec="scan_to_scan_filter_chain" name="laser_filter" output="screen">
+            <param from="$(find-pkg-share capybara_bringup)/config/laser_filter.yaml" />
+            <remap from="scan" to="scan_raw" />
+            <remap from="scan_filtered" to="scan" />
         </node>
     </group>
 
