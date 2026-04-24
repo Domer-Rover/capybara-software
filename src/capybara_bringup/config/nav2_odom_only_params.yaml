@@ -105,7 +105,7 @@ planner_server:
       non_straight_penalty: 1.20
       cost_penalty: 1.30
       retrospective_penalty: 0.015
-      lookup_table_size: 20
+      lookup_table_size: 20.0
       cache_obstacle_heuristic: false            # rolling odom costmap, can't cache
       smoother:
         max_iterations: 1000
