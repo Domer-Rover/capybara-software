@@ -204,8 +204,8 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 1.0          # smooth potential field beyond robot edge
-        cost_scaling_factor: 1.0       # gentle slope — paths stay mid-corridor
+        inflation_radius: 0.70         # just above circumscribed radius (~0.65m) — tight indoor fit
+        cost_scaling_factor: 2.5       # sharper falloff, less pink spread
         inflate_unknown: false
         inflate_around_unknown: true
       always_send_full_costmap: True
@@ -271,8 +271,8 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 1.0
-        cost_scaling_factor: 1.0
+        inflation_radius: 0.70
+        cost_scaling_factor: 2.5
         inflate_unknown: false
         inflate_around_unknown: true
       always_send_full_costmap: True
