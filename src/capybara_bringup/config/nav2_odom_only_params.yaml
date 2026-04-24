@@ -52,10 +52,8 @@ controller_server:
       stateful: True
 
     FollowPath:
-      # Regulated Pure Pursuit — paired with Smac Hybrid-A* for exact path tracking.
-      # Geometric controller; robust to open-loop duty-cycle hardware imprecision.
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.2
+      desired_linear_vel: 0.1
       lookahead_dist: 0.6
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
@@ -73,7 +71,7 @@ controller_server:
       use_cost_regulated_linear_velocity_scaling: true  # slows near inflation potential field
       regulated_linear_scaling_min_radius: 0.9
       regulated_linear_scaling_min_speed: 0.25
-      use_rotate_to_heading: false       # rover can't pivot cleanly; Hybrid-A* paths start tangent
+      use_rotate_to_heading: false
       allow_reversing: false
       rotate_to_heading_min_angle: 0.785
       max_angular_accel: 0.7
