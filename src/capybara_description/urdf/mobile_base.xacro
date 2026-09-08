@@ -113,7 +113,7 @@
         </inertial>
     </link>
 
-    <!-- LIDAR LINK (STL-19P) - on top of the pole -->
+    <!-- LIDAR LINK (LD19) -->
     <link name="laser_frame">
         <visual>
             <geometry>

@@ -7,20 +7,22 @@ Welcome to the software repo for the Capybara mars rover! This document will giv
 
 ## Directory Structure
 
-- **.github**
-  _CI pipeline and PR/issue templates_
-- **capybara_bringup**
-  _Launch files and configuration_
-- **.capybara_description**
-  _Hardware Description for ros2\_control_
-- **capybara_driving**
-  _Driving package for robot\_localization_
-- **.capybara_hw**
-  _Hardware Interface for ros2\_control_
-- **.scripts**
-  _Helper scripts for mainly testing and setup_
-- **.vendors**
-  _Manually installed external libraries_
-- **Dockerfile**
-  _Dockerfile for vnc and headless containers_
+- **src/capybara_bringup**
+  _Launch files, Nav2 / SLAM / controller configs, maps_
+- **src/capybara_description**
+  _URDF/xacro robot description and ros2\_control block_
+- **src/capybara_hw**
+  _ros2\_control hardware interface for the RoboClaw motor controllers_
+- **src/imu_package**
+  _BNO055 IMU driver (currently unused; ZED2i IMU is used via VIO)_
+- **src/vendors**
+  _Vendored external packages: ZED ROS 2 wrapper, roboclaw\_serial_
+- **scripts**
+  _Jetson setup, developer onboarding, and hardware test scripts_
+- **docker**
+  _Dockerfiles for the VNC dev container and the headless Jetson container_
+- **models**
+  _ONNX detection models_
+
+See `DOCUMENTATION.md` for setup and usage, and `../ROADMAP.md` for the season plan.
 
