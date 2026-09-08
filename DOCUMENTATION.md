@@ -1,5 +1,79 @@
 # Capybara Robot Documentation
 
+## Developer Accounts on the Jetson
+
+Every developer gets their own Linux user on the Jetson. Each user has their own
+home directory, their own clone of the team repos, their own branches, and their
+own git author. Everyone can be SSHed in at the same time. ROS 2 and the ZED SDK
+are installed once system-wide and shared.
+
+The only hard limit is hardware: the RoboClaw, LIDAR, GPS, and ZED can each be
+opened by one process at a time, so only one person can drive the rover at once.
+Coordinate in the team chat before launching hardware.
+
+### Onboard a new developer (done by an admin, once per person)
+
+```bash
+cd ~/domerrover/capybara-software
+sudo scripts/add_dev_user.sh <username> "<Full Name>" <git-email>
+# e.g.
+sudo scripts/add_dev_user.sh alice "Alice Example" alice@nd.edu
+```
+
+You will be prompted for the new user's login password. The script then:
+
+1. Creates the Linux user and home directory (`adduser`).
+2. Adds them to the `dialout` (serial ports) and `video` (cameras) groups (`usermod -aG`).
+3. Adds `source /opt/ros/humble/setup.bash` to their `.bashrc`.
+4. Generates an SSH key (`~/.ssh/id_ed25519`) for GitHub.
+5. Clones `capybara-software`, `gerbil-software`, and `phoenix-software` into `~/domerrover/`.
+6. Sets their global git `user.name` and `user.email`.
+7. Prints the public key.
+
+Send the printed public key to the new developer. They add it at
+<https://github.com/settings/keys> (New SSH key). GitHub does not accept account
+passwords for git anymore, so this key is what lets them push.
+
+### First login (done by the developer)
+
+```bash
+ssh <username>@<jetson-ip>
+```
+
+Nothing else to configure. Check that git and GitHub work:
+
+```bash
+ssh -T git@github.com          # should greet you by GitHub username
+cd ~/domerrover/capybara-software
+git status
+```
+
+Optional: run `ssh-copy-id <username>@<jetson-ip>` once from your laptop to
+skip the password on future logins.
+
+### Daily workflow
+
+```bash
+ssh <username>@<jetson-ip>
+cd ~/domerrover/capybara-software
+git checkout main && git pull
+git checkout -b feat/my-change
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch capybara_bringup capybara_foxglove.launch.py use_mock_hardware:=false
+# ... commit, push, open a PR
+```
+
+Your `build/` and `install/` directories live inside your own clone, so they
+never collide with anyone else's.
+
+### The deployed copy
+
+The shared runtime account holds the checkout that runs during missions. It
+only ever tracks `main`. Do not develop in it; merge a PR and pull there instead.
+
+---
+
 ## Jetson Serial Port Setup
 
 Configure UART for RoboClaw, Modems, Science Sensors 
