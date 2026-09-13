@@ -1,36 +1,98 @@
 #!/usr/bin/env bash
 # add_dev_user.sh — onboard a developer onto the Jetson.
 #
-# Creates a Linux user with their own home, clones the repo into it, sets their
-# git author, sources ROS in their shell, and generates an SSH key for GitHub.
+# Creates a Linux user with their own home, adds the hardware groups, clones the
+# team repos, sets their git author, sources ROS in their shell, and generates
+# an SSH key for GitHub (Jetson -> GitHub pushes).
+#
+# The GitHub key is NOT a login key. To log in without a password, each
+# developer runs `ssh-copy-id <username>@<jetson>` once from their own laptop.
 #
 # Usage (run on the Jetson as a sudoer):
 #   sudo scripts/add_dev_user.sh <username> "<Full Name>" <git-email>
+#   sudo scripts/add_dev_user.sh --regen-key <username>
 #
-# You will be prompted for the new user's login password.
-# GitHub no longer accepts account passwords for git; the SSH key printed at the
-# end is what the user adds to https://github.com/settings/keys.
+# Safe to re-run on a user that already exists; finished steps are skipped.
 set -euo pipefail
 
 GITHUB_ORG="Domer-Rover"
 REPOS=(capybara-software gerbil-software phoenix-software)
 WORK_DIR="domerrover"   # repos land in ~/domerrover/<repo>
 ROS_SETUP="/opt/ros/humble/setup.bash"
-GROUPS_TO_ADD="dialout,video"
+# Hardware + log access only. No sudo/docker: both are root-equivalent.
+GROUPS_TO_ADD=(dialout video render plugdev i2c gpio zed jtop adm)
+
+usage() {
+    echo "Usage: sudo $0 <username> \"<Full Name>\" <git-email>" >&2
+    echo "       sudo $0 --regen-key <username>" >&2
+    exit 1
+}
 
 if [[ $EUID -ne 0 ]]; then
     echo "Run with sudo." >&2
     exit 1
 fi
-if [[ $# -ne 3 ]]; then
-    echo "Usage: sudo $0 <username> \"<Full Name>\" <git-email>" >&2
+
+REGEN_KEY=false
+if [[ ${1:-} == "--regen-key" ]]; then
+    [[ $# -eq 2 ]] || usage
+    REGEN_KEY=true
+    USERNAME="$2"
+else
+    [[ $# -eq 3 ]] || usage
+    USERNAME="$1"
+    FULLNAME="$2"
+    EMAIL="$3"
+fi
+
+if [[ ! $USERNAME =~ ^[a-z][a-z0-9_-]*$ ]]; then
+    echo "Bad username '$USERNAME': Linux usernames must be all lowercase (letters, digits, - or _)," >&2
+    echo "starting with a letter, e.g. 'henry'. This is separate from your GitHub handle." >&2
     exit 1
 fi
 
-USERNAME="$1"
-FULLNAME="$2"
-EMAIL="$3"
 HOME_DIR="/home/$USERNAME"
+SSH_DIR="$HOME_DIR/.ssh"
+KEY="$SSH_DIR/id_ed25519"
+
+# Run a command as the user from inside their home. Without the cd, the command
+# inherits the admin's working directory, which the user can't read ("could not stat").
+as_user() {
+    (cd "$HOME_DIR" && sudo -u "$USERNAME" -H "$@")
+}
+
+make_github_key() {
+    local comment
+    comment="$(as_user git config --global user.email 2>/dev/null || echo "$USERNAME@$(hostname)")"
+    as_user mkdir -p "$SSH_DIR"
+    chmod 700 "$SSH_DIR"
+    as_user ssh-keygen -t ed25519 -C "$comment" -N "" -f "$KEY" -q
+    if ! as_user ssh-keygen -F github.com &>/dev/null; then
+        as_user bash -c "ssh-keyscan -t ed25519 github.com 2>/dev/null >> ~/.ssh/known_hosts"
+    fi
+}
+
+print_github_key() {
+    echo
+    echo "================================================================"
+    echo "GitHub SSH key for $USERNAME. Add it at https://github.com/settings/keys"
+    echo "(New SSH key -> paste the whole line below):"
+    echo
+    cat "$KEY.pub"
+    echo "================================================================"
+    echo
+}
+
+# --regen-key: replace a lost or never-added GitHub key. Login keys
+# (authorized_keys) are not touched.
+if $REGEN_KEY; then
+    id "$USERNAME" &>/dev/null || { echo "User $USERNAME does not exist." >&2; exit 1; }
+    rm -f "$KEY" "$KEY.pub"
+    make_github_key
+    print_github_key
+    echo "If the old key was added to GitHub, delete it there."
+    exit 0
+fi
 
 # 1. Linux account
 if id "$USERNAME" &>/dev/null; then
@@ -38,52 +100,48 @@ if id "$USERNAME" &>/dev/null; then
 else
     adduser --gecos "$FULLNAME" "$USERNAME"
 fi
-usermod -aG "$GROUPS_TO_ADD" "$USERNAME"
 
-# 2. ROS in every login shell
-if ! grep -q "$ROS_SETUP" "$HOME_DIR/.bashrc"; then
-    echo "source $ROS_SETUP" >> "$HOME_DIR/.bashrc"
-    chown "$USERNAME:$USERNAME" "$HOME_DIR/.bashrc"
+# 2. Groups (skip any that don't exist on this board instead of failing)
+for g in "${GROUPS_TO_ADD[@]}"; do
+    if getent group "$g" &>/dev/null; then
+        usermod -aG "$g" "$USERNAME"
+    else
+        echo "Warning: group '$g' does not exist on this system, skipping."
+    fi
+done
+
+# 3. Git author and ROS environment
+as_user git config --global user.name "$FULLNAME"
+as_user git config --global user.email "$EMAIL"
+if ! grep -qF "$ROS_SETUP" "$HOME_DIR/.bashrc" 2>/dev/null; then
+    echo "source $ROS_SETUP" | as_user tee -a "$HOME_DIR/.bashrc" >/dev/null
 fi
 
-# 3. SSH key for GitHub
-SSH_DIR="$HOME_DIR/.ssh"
-KEY="$SSH_DIR/id_ed25519"
-if [[ ! -f "$KEY" ]]; then
-    sudo -u "$USERNAME" mkdir -p "$SSH_DIR"
-    chmod 700 "$SSH_DIR"
-    sudo -u "$USERNAME" ssh-keygen -t ed25519 -C "$EMAIL" -N "" -f "$KEY" -q
-fi
-# Trust github.com so the first clone doesn't prompt
-sudo -u "$USERNAME" bash -c "ssh-keyscan -t ed25519 github.com 2>/dev/null >> '$SSH_DIR/known_hosts'"
+# 4. GitHub key, printed before cloning so a clone failure can't hide it
+[[ -f "$KEY" ]] || make_github_key
+print_github_key
 
-# 4. Repo clones. The SSH key is not on GitHub yet, so clone over HTTPS
-#    (public read works without auth) and point the push URL at SSH so
-#    pushes work as soon as the key is added.
-sudo -u "$USERNAME" mkdir -p "$HOME_DIR/$WORK_DIR"
+# 5. Repo clones over HTTPS (works before the key is on GitHub, for public
+#    repos); push URL set to SSH so pushes work once the key is added.
+as_user mkdir -p "$HOME_DIR/$WORK_DIR"
 for repo in "${REPOS[@]}"; do
     dest="$HOME_DIR/$WORK_DIR/$repo"
     if [[ -d "$dest/.git" ]]; then
         echo "$repo already cloned."
         continue
     fi
-    sudo -u "$USERNAME" git clone "https://github.com/$GITHUB_ORG/$repo.git" "$dest"
-    sudo -u "$USERNAME" git -C "$dest" remote set-url --push origin "git@github.com:$GITHUB_ORG/$repo.git"
+    if as_user git clone "https://github.com/$GITHUB_ORG/$repo.git" "$dest"; then
+        as_user git -C "$dest" remote set-url --push origin "git@github.com:$GITHUB_ORG/$repo.git"
+    else
+        echo "Warning: could not clone $repo (private repo?). After adding the GitHub key, run:" >&2
+        echo "  git clone git@github.com:$GITHUB_ORG/$repo.git ~/$WORK_DIR/$repo" >&2
+    fi
 done
 
-# 5. Git author (global for this user, so it applies to any repo they clone)
-sudo -u "$USERNAME" git config --global user.name "$FULLNAME"
-sudo -u "$USERNAME" git config --global user.email "$EMAIL"
-
 echo
-echo "================================================================"
 echo "User $USERNAME is set up."
-echo
-echo "Give them this public key to add at https://github.com/settings/keys :"
-echo
-cat "$KEY.pub"
-echo
-echo "Then they log in with:   ssh $USERNAME@$(hostname -I | awk '{print $1}')"
-echo "Repos:                   ~/$WORK_DIR/{${REPOS[*]// /,}}"
-echo "Note: group changes (serial ports, camera) apply on their first login."
-echo "================================================================"
+echo "Groups: $(id -nG "$USERNAME")"
+echo "Repos:  ~/$WORK_DIR/"
+echo "Login:  from your laptop, once:  ssh-copy-id $USERNAME@$(hostname -f)"
+echo "        then:                    ssh $USERNAME@$(hostname -f)"
+echo "Group changes apply on the next login."
