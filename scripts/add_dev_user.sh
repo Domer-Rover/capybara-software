@@ -94,11 +94,17 @@ if $REGEN_KEY; then
     exit 0
 fi
 
-# 1. Linux account
+# 1. Linux account. useradd, not adduser: the Jetson's /etc/adduser.conf adds
+#    desktop EXTRA_GROUPS (e.g. lightdm) that don't exist on this image, which
+#    makes adduser abort halfway through.
 if id "$USERNAME" &>/dev/null; then
     echo "User $USERNAME already exists, skipping account creation."
 else
-    adduser --gecos "$FULLNAME" "$USERNAME"
+    useradd --create-home --shell /bin/bash --comment "$FULLNAME" "$USERNAME"
+    echo "Set a login password for $USERNAME:"
+    until passwd "$USERNAME"; do
+        echo "Passwords didn't match, try again."
+    done
 fi
 
 # 2. Groups (skip any that don't exist on this board instead of failing)
