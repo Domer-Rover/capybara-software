@@ -3,7 +3,7 @@
 
 Navigates purely in the odom frame using ZED visual odometry.
 No SLAM map, no AMCL localization. Send goals relative to the odom origin.
-Requires the Innomaker LD06 LIDAR to be physically connected (/dev/ttyUSB1).
+Requires the Innomaker LD06 LIDAR to be physically connected (/dev/rover_lidar).
 The LIDAR driver is launched via capybara.launch.xml with launch_lidar:=true.
 
 For LIDAR-free obstacle detection using ZED depth, use:
