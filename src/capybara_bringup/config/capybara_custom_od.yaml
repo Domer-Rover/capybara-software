@@ -3,7 +3,11 @@
 # Loaded by the ZED wrapper when detection_model is 'CUSTOM_YOLOLIKE_BOX_OBJECTS'.
 # The ONNX file is produced by running:
 #   ros2 run capybara_bringup yolov8_export_onnx.py
-# which exports yolov8n.pt → /home/jetsonson/capybara-software/models/yolov8n.onnx
+# which exports yolov8n.pt → <repo>/models/yolov8n.onnx
+#
+# NOTE: not launched by any launch file yet. The ZED SDK needs an absolute
+# path, set below for the deployed copy in /home/jetsonson. yolov8n.onnx is
+# not committed; run the export first (only yolov8n-oiv7.onnx is in models/).
 #
 # COCO class IDs referenced below:
 #   39 = bottle  (covers water bottles)
