@@ -22,7 +22,7 @@ Common args: `use_mock_hardware:=true`, `launch_zed:=false`, `use_joystick:=true
 ## Teleop
 
 ```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/diff_drive_controller/cmd_vel_unstamped
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/diff_drive_controller/cmd_vel_unstamped -p speed:=0.2 -p turn:=0.5
 ```
 
 ## Checks
@@ -37,5 +37,5 @@ ros2 run tf2_ros tf2_echo odom base_footprint
 ## Troubleshooting
 
 - Permission denied on a serial port or ZED: `id -nG` must include `dialout`, `video`, `zed`. Log out and back in after groups change.
-- Port busy: another launch is running. `sudo fuser -v /dev/ttyUSB0` (admin).
+- Port busy: another launch is running. `sudo fuser -v /dev/rover_roboclaw` (admin).
 - Motors don't move: check you didn't pass `use_mock_hardware:=true`, and `ros2 control list_controllers` shows both controllers active.

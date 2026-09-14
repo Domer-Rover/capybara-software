@@ -1,0 +1,6 @@
+# Stable names for rover serial devices, matched by USB serial ID.
+# Install: sudo cp udev/99-rover.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules && sudo udevadm trigger
+# Check:   ls -l /dev/rover_*
+SUBSYSTEM=="tty", ENV{ID_SERIAL}=="FTDI_FT232R_USB_UART_BG00HO5R", SYMLINK+="rover_roboclaw", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", ENV{ID_SERIAL}=="Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001", SYMLINK+="rover_lidar", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", ENV{ID_SERIAL}=="u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver", SYMLINK+="rover_gps", GROUP="dialout", MODE="0660"

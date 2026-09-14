@@ -52,7 +52,7 @@
         <node pkg="ldlidar_stl_ros2" exec="ldlidar_stl_ros2_node" name="ldlidar_node" output="screen">
             <param name="product_name" value="LDLiDAR_LD06" />
             <param name="topic_name" value="scan_raw" />
-            <param name="port_name" value="/dev/ttyUSB1" />
+            <param name="port_name" value="/dev/rover_lidar" />
             <param name="port_baudrate" value="230400" />
             <param name="laser_scan_dir" value="true" />
             <param name="frame_id" value="laser_frame" />
@@ -66,10 +66,10 @@
 
     <!-- ==================== GPS (u-blox ZED-F9P via USB) ==================== -->
     <!-- Publishes NavSatFix to /fix — ZED SDK fuses it via gnss_fusion_enabled.  -->
-    <!-- Device is /dev/ttyACM0 (u-blox ZED-F9P confirmed).   -->
+    <!-- /dev/rover_gps is created by udev/99-rover.rules.        -->
     <group if="$(var launch_gps)">
         <node pkg="ublox_gps" exec="ublox_gps_node" name="gps" output="screen">
-            <param name="device" value="/dev/ttyACM0" />
+            <param name="device" value="/dev/rover_gps" />
             <param name="frame_id" value="gps" />
             <param name="uart1.baudrate" value="38400" />
             <param name="publish.nav.posllh" value="true" />

@@ -26,10 +26,17 @@ ssh -T git@github.com                              # confirms GitHub key works
 
 ## Serial devices
 
-| Device | Port | by-id |
-|---|---|---|
-| RoboClaw | `/dev/ttyUSB0` | `usb-FTDI_FT232R_USB_UART_BG00HO5R` |
-| LD19 LIDAR | `/dev/ttyUSB1` | `usb-Silicon_Labs_CP2102_...` |
-| u-blox GPS | `/dev/ttyACM0` | `usb-u-blox_AG_...` |
+`ttyUSB` numbers swap between boots, so configs use stable names from `udev/99-rover.rules`. Install once (admin), and again after adding or replacing an adapter:
 
-`ttyUSB` numbers can swap after reboot. Check with `ls -l /dev/serial/by-id/`.
+```bash
+sudo cp udev/99-rover.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules && sudo udevadm trigger
+ls -l /dev/rover_*
+```
+
+| Name | Device | USB adapter |
+|---|---|---|
+| `/dev/rover_roboclaw` | 3 RoboClaws (addresses 128–130) | FTDI FT232R `BG00HO5R` |
+| `/dev/rover_lidar` | LD19 LIDAR | Silicon Labs CP2102 |
+| `/dev/rover_gps` | u-blox GPS | u-blox GNSS receiver |
+
+Check what's plugged in: `ls -l /dev/serial/by-id/`
