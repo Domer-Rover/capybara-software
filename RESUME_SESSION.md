@@ -15,6 +15,6 @@ https://claude.ai/code/session_01XooinpebaTuuvn3FGVN3Cu
 ## Where we left off
 
 - Season plan: `../ROADMAP.md`
-- Done: `scripts/add_dev_user.sh` + Developer Accounts section in `DOCUMENTATION.md`; housekeeping edits (uncommitted, branch `nav2`).
+- Done: `scripts/add_dev_user.sh` + `docs/jetson-setup.md`; housekeeping edits (uncommitted, branch `nav2`).
 - Next: test `add_dev_user.sh` on the Jetson, then Sprint 1
   (`wheel_separation` fix, HW interface hardening, udev rules, VIO drift test).
