@@ -1,5 +1,7 @@
 # Docker Images
 
+Out of date and not currently used; the rover runs natively on the Jetson.
+
 ## Dockerfile.dev
 Development environment with GUI support.
 

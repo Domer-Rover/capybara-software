@@ -4,7 +4,7 @@
 The ZED SDK's CUSTOM_YOLOLIKE_BOX_OBJECTS detection mode requires an ONNX file
 exported with opset=12 and simplify=True so it can be optimised by TensorRT.
 
-Output:  /home/jetsonson/capybara-software/models/yolov8n.onnx
+Output:  <repo>/models/yolov8n.onnx
 Config:  src/capybara_bringup/config/capybara_custom_od.yaml → custom_onnx_file
 
 Usage:
@@ -25,7 +25,9 @@ import os
 import shutil
 import sys
 
-OUTPUT_DIR = '/home/jetsonson/capybara-software/models'
+# <repo>/models, resolved through the --symlink-install link back to src/
+OUTPUT_DIR = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'models')
 
 
 def parse_args():

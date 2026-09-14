@@ -21,8 +21,5 @@ __pycache__/
 *.md
 !src/*/README.md
 
-# Scripts (not needed in container)
-scripts/
-
 # macOS
 .DS_Store

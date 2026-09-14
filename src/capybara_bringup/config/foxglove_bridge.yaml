@@ -10,7 +10,7 @@
     ros__parameters:
         address: '0.0.0.0'
         num_threads: 4
-        max_qos_depth: 10         # tf_static needs depth > 1 (TRANSIENT_LOCAL, multi-message)
+        max_qos_depth: 20         # tf_static needs depth > 1 (TRANSIENT_LOCAL, multi-message)
         send_buffer_limit: 10485760  # 10 MB: drop old frames instead of buffering
 
         topic_whitelist:
@@ -32,6 +32,9 @@
             - '/zed/zed_node/rgb/color/rect/camera_info'
             - '/zed/zed_node/odom'
             - '/zed/zed_node/pose'
+            - '/zed/zed_node/pose_with_covariance'
+            - '/zed/zed_node/pose/status'
+            - '/zed/zed_node/path_odom'
             - '/zed/zed_node/imu/data'
 
             # ── LIDAR ───────────────────────────────────────────────────────

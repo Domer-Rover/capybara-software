@@ -128,6 +128,9 @@ private:
 
   /// Vector of uniqely addressable roboclaw units
   std::vector<RoboClawUnit> roboclaw_units_;
+
+  /// Duty cycle multiplier applied to rear wheels during turns (configured via URDF)
+  double rear_turn_boost_ = 1.0;
 };
 }  // namespace roboclaw_hardware_interface
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Nav2 odom-only navigation with STL-19P LIDAR obstacle detection.
+"""Nav2 odom-only navigation with LD06 LIDAR obstacle detection.
 
 Navigates purely in the odom frame using ZED visual odometry.
 No SLAM map, no AMCL localization. Send goals relative to the odom origin.
-Requires the STL-19P LIDAR to be physically connected (/dev/ttyUSB1).
+Requires the Innomaker LD06 LIDAR to be physically connected (/dev/ttyUSB1).
+The LIDAR driver is launched via capybara.launch.xml with launch_lidar:=true.
 
 For LIDAR-free obstacle detection using ZED depth, use:
   archive/capybara_nav2_zed.launch.py  (uses pointcloud_to_laserscan instead)
@@ -54,6 +55,7 @@ def generate_launch_description():
             'use_mock_hardware': LaunchConfiguration('use_mock_hardware'),
             'launch_rviz': 'false',
             'launch_zed': 'true',
+            'launch_lidar': 'true',
         }.items()
     )
 
@@ -66,20 +68,6 @@ def generate_launch_description():
             PathJoinSubstitution([capybara_bringup_share, 'config', 'foxglove_bridge.yaml']),
             {'port': LaunchConfiguration('foxglove_port')},
         ],
-        output='screen'
-    )
-
-    # STL-19P LIDAR — provides /scan for nav2 costmap obstacle detection
-    lidar_node = Node(
-        package='sllidar_ros2',
-        executable='sllidar_node',
-        name='sllidar_node',
-        parameters=[{
-            'serial_port': '/dev/ttyUSB1',
-            'serial_baudrate': 38400,
-            'frame_id': 'laser_frame',
-            'scan_mode': 'Standard',
-        }],
         output='screen'
     )
 
@@ -139,11 +127,9 @@ def generate_launch_description():
     return LaunchDescription([
         use_mock_hardware_arg,
         foxglove_port_arg,
-        # Robot base (controllers + ZED)
+        # Robot base (controllers + ZED + LIDAR)
         capybara_launch,
         foxglove_bridge,
-        # LIDAR for obstacle detection
-        lidar_node,
         # Navigation (odom-only, no map/AMCL)
         controller_server,
         planner_server,

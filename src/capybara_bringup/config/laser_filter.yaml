@@ -1,0 +1,15 @@
+scan_to_scan_filter_chain:
+  ros__parameters:
+    filter1:
+      name: front_180_only
+      type: laser_filters/LaserScanAngularBoundsFilter
+      params:
+        # Crops the rear half of the scan so the chassis arm behind the LIDAR
+        # is not seen as an obstacle. Angles are in the laser_frame (LD19 scan
+        # range is [0, 2π], not [-π, π]).
+        #
+        # TODO(verify): lidar_joint in mobile_base.xacro now applies
+        # rpy="0 0 -1.5708". These bounds were chosen before that change and
+        # may be 90° off. Confirm in Foxglove that the kept arc is the front.
+        lower_angle: 0.0
+        upper_angle: 3.1416

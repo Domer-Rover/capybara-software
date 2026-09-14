@@ -9,7 +9,10 @@
 #   docker compose up ros-jetson
 #   docker exec -it capybara-jetson bash
 #   colcon build && source install/setup.bash
-#   ros2 launch capybara_bringup capybara_nav2_zed.launch.py use_mock_hardware:=false
+#   ros2 launch capybara_bringup capybara_nav2_simple.launch.py use_mock_hardware:=false
+#
+# NOTE: this image is currently out of date (missing requirements.txt, wrong
+# lidar package). Native install on the Jetson is the supported path for now.
 # ============================================================
 
 FROM ros:humble-ros-base

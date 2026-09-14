@@ -36,8 +36,9 @@ public:
   // Read the encoder counts from the roboclaw and update position state
   void read();
 
-  // Convert the velocity command to motor command and write to the roboclaw
-  void write();
+  // Convert the velocity command to motor command and write to the roboclaw.
+  // rear_boost: multiplier applied to rear wheel duty cycles (1.0 = no boost)
+  void write(double rear_boost = 1.0);
 
 private:
   roboclaw_serial::Interface::SharedPtr interface_;

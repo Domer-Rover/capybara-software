@@ -6,7 +6,7 @@
 <p align="center">
   Software stack for <b>Capybara</b>, the Mars rover built by <a href="https://github.com/Domer-Rover">Domer Rover</a> for the University Rover Challenge.
   <br />
-  Built on <b>ROS 2</b>, this repo houses everything that lets Capybara drive, sense, and complete mission tasks.
+  Built on <b>ROS 2 Humble</b> on a Jetson, with a ZED2i camera, LD19 LIDAR, u-blox GPS, and RoboClaw motor controllers.
 </p>
 
 <p align="center">
@@ -18,7 +18,7 @@
 <p align="center">
   <a href="https://github.com/Domer-Rover">Domer Rover</a>
   ·
-  <a href="https://github.com/Domer-Rover/capybara-software/blob/main/DOCUMENTATION.md">Documentation</a>
+  <a href="https://github.com/Domer-Rover/capybara-software/tree/main/docs">Documentation</a>
   ·
   <a href="https://github.com/Domer-Rover/capybara-software/issues">Report an Issue</a>
 </p>
@@ -27,45 +27,40 @@
 
 ## Overview
 
-Capybara is Domer Rover's entry for the **University Rover Challenge (URC)**, and this repository is its onboard software stack. It's built as a set of ROS 2 packages that together handle driving, hardware interfacing, and the launch/config plumbing needed to bring the rover up in the field or in simulation.
+Capybara is Domer Rover's entry for the **University Rover Challenge (URC)**, and this repository is its onboard software stack: ROS 2 packages for driving, hardware interfacing, navigation, and the launch/config plumbing to bring the rover up.
 
 ## Directory Structure
 
 | Path | Description |
 | --- | --- |
-| `.github` | CI pipeline and PR/issue templates |
-| `capybara_bringup` | Launch files and configuration |
-| `capybara_description` | Hardware description for `ros2_control` |
-| `capybara_driving` | Driving package, built on `robot_localization` |
-| `capybara_hw` | Hardware interface for `ros2_control` |
-| `docker` | Container definitions for VNC and headless environments |
-| `models` | Robot/hardware models |
-| `scripts` | Helper scripts, mainly for testing and setup |
-| `vendors` | Manually installed external libraries |
-| `Dockerfile` / `docker-compose.yml` | Container build and orchestration |
-| `DOCUMENTATION.md` | Deeper documentation on the packages above |
+| `src/capybara_bringup` | Launch files, Nav2/SLAM/controller configs, maps |
+| `src/capybara_description` | URDF and `ros2_control` block |
+| `src/capybara_hw` | RoboClaw hardware interface for `ros2_control` |
+| `src/imu_package` | BNO055 driver (unused; the ZED2i IMU is used) |
+| `src/vendors` | ZED ROS 2 wrapper, `roboclaw_serial` |
+| `scripts` | Developer onboarding and hardware test scripts |
+| `docker` | Dockerfiles (out of date) |
+| `docs` | Setup and usage guides |
 
 ## Getting Started
 
-Capybara's software runs in Docker to keep the ROS 2 environment consistent across every machine on the team, from laptops to the rover's onboard computer.
+The rover runs natively on the Jetson. Each developer has their own account and clone ([Jetson setup](docs/jetson-setup.md)).
 
-- Clone the repo:
-  ```bash
-  git clone https://github.com/Domer-Rover/capybara-software.git
-  cd capybara-software
-  ```
-- Build and start the containers:
-  ```bash
-  docker compose up --build
-  ```
-- See [`DOCUMENTATION.md`](https://github.com/Domer-Rover/capybara-software/blob/main/DOCUMENTATION.md) for package-level details, launch instructions, and hardware setup.
+```bash
+ssh <username>@jetsonson.dhcp.nd.edu
+cd ~/domerrover/capybara-software
+colcon build --symlink-install && source install/setup.bash
+ros2 launch capybara_bringup capybara_foxglove.launch.py
+```
+
+Connect Foxglove to `ws://jetsonson.dhcp.nd.edu:8765`. See [Build and run](docs/build-and-run.md) for other launch files and checks.
 
 ## Built With
 
-- **ROS 2** — robotics middleware powering every package in this repo
-- **ros2_control** — hardware abstraction and control
-- **robot_localization** — sensor fusion for driving/odometry
-- **Docker** — reproducible builds for VNC and headless deployment
+- **ROS 2 Humble**: middleware for every package in this repo
+- **ros2_control**: hardware abstraction and control
+- **Nav2**: autonomous navigation
+- **ZED SDK**: visual-inertial odometry
 
 ## About Domer Rover
 
@@ -73,7 +68,7 @@ Capybara's software runs in Docker to keep the ROS 2 environment consistent acro
 
 ## Contributing
 
-Bug reports and pull requests are welcome — check the `.github` folder for issue and PR templates, and open an [issue](https://github.com/Domer-Rover/capybara-software/issues) if you run into a problem.
+Bug reports and pull requests are welcome. Check the `.github` folder for the PR template, and open an [issue](https://github.com/Domer-Rover/capybara-software/issues) if you run into a problem.
 
 ## License
 

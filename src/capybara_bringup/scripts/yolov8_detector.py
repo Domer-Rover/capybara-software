@@ -17,6 +17,7 @@ Usage examples (ros2 run or launch arg):
                -p target_classes:="['Bottle','Hammer']"
 """
 
+import os
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
@@ -40,13 +41,17 @@ _CLASS_COLORS = {
 }
 _DEFAULT_COLOR = (0, 255, 0)   # green for any other matched class
 
+# <repo>/models/yolov8n-oiv7.onnx, resolved through the --symlink-install link back to src/
+_DEFAULT_MODEL = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'models', 'yolov8n-oiv7.onnx')
+
 
 class Yolov8Detector(Node):
     def __init__(self):
         super().__init__('yolov8_detector')
 
         # ── Parameters ────────────────────────────────────────────────────────
-        self.declare_parameter('model_path', '/home/jetsonson/capybara-software/models/yolov8n-oiv7.onnx')
+        self.declare_parameter('model_path', _DEFAULT_MODEL)
         self.declare_parameter('target_classes', ['Bottle', 'Hammer'])
         self.declare_parameter('confidence_threshold', 0.40)
         self.declare_parameter('image_topic', '/zed/zed_node/left/image_rect_color')

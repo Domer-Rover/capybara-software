@@ -102,14 +102,14 @@
             pos_tracking_mode: 'GEN_3' # Matches the ZED SDK setting: 'GEN_1', 'GEN_2', 'GEN_3'
             imu_fusion: true # enable/disable IMU fusion. When set to false, only the optical odometry will be used.
             publish_tf: true # [overwritten by launch file options] publish `odom -> camera_link` TF
-            publish_map_tf: true # RTAB-Map publishes map→odom TF — keep false to avoid TF conflict
+            publish_map_tf: true # [overwritten by launch file: capybara.launch.xml sets false so SLAM/AMCL own map->odom]
             map_frame: 'map'
             odometry_frame: 'odom'
             area_memory: false # DISABLED — loop closure causes sudden odometry jumps that break nav2 mid-navigation
             area_file_path: ''
             enable_localization_only: false
             save_area_memory_on_closing: false
-            reset_odom_with_loop_closure: true # DISABLED — odometry resets mid-nav cause "Pose Goes Off Grid" failures
+            reset_odom_with_loop_closure: true # no effect while area_memory is false (no loop closures)
             publish_3d_landmarks: false # Publish 3D landmarks used by the positional tracking algorithm
             publish_lm_skip_frame: 5 # Publish the landmarks every X frames to reduce bandwidth. Set to 0 to publish all landmarks
             depth_min_range: 0.3 # Exclude chassis/mount area directly in front of camera from visual tracking
@@ -119,7 +119,7 @@
             initial_base_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Initial position of the `camera_link` frame in the map -> [X, Y, Z, R, P, Y]
             path_pub_rate: 2.0 # [DYNAMIC] - Camera trajectory publishing frequency
             path_max_count: 30 # Nav2 VIO guide recommendation — prevents unbounded memory growth; -1 is unlimited
-            two_d_mode: true # Outdoor rover on uneven terrain — 3D tracking is more accurate when camera pitches/rolls over bumps; Nav2 ignores Z/roll/pitch anyway
+            two_d_mode: true # Forces Z/roll/pitch to zero for planar Nav2. Try false outdoors if VIO drifts on bumps (3D tracking handles pitch/roll better)
             fixed_z_value: 0.0 # Value to be used for Z coordinate if `two_d_mode` is true
             transform_time_offset: 0.0 # The value added to the timestamp of `map->odom` and `odom->camera_link` transform being generated
             reset_pose_with_svo_loop: true # Reset the camera pose the `initial_base_pose` when the SVO loop is enabled and the SVO playback reaches the end of the file.

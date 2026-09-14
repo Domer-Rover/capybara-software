@@ -5,7 +5,7 @@ Third-party ROS2 packages vendored for build consistency and offline development
 ## Packages
 
 ### roboclaw_serial
-- Source: Custom implementation
+- Source: Eric Cox's `roboclaw_serial` (header-only packet serial library)
 - Purpose: Serial communication for BasicMicro RoboClaw motor controllers
 - License: See package LICENSE
 
@@ -14,7 +14,7 @@ Third-party ROS2 packages vendored for build consistency and offline development
 - Version: Vendored Feb 4, 2024
 - Purpose: ROS2 wrapper for ZED2i camera
 - License: See package LICENSE
-- Contains: `zed_components`, `zed_wrapper`, `zed_debug`, `zed_ros2`
+- Contains: `zed_components`, `zed_wrapper`, `zed_ros2`, `zed_debug` (skipped by colcon via `COLCON_IGNORE`)
 
 ## Updating
 
