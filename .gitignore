@@ -243,3 +243,5 @@ CLAUDE.md
 
 # jetson max power file
 jetson_maxpower.service
+
+RESUME_SESSION.md
