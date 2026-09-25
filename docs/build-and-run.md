@@ -23,7 +23,11 @@ ros2 launch capybara_bringup capybara_slam.launch.py          # build a map
 ros2 launch capybara_bringup capybara_nav2_slam.launch.py     # Nav2 on saved map
 ```
 
-Common args: `use_mock_hardware:=true`, `launch_zed:=false`, `use_joystick:=true`
+Common args: `use_mock_hardware:=true`, `launch_zed:=false`, `use_joystick:=true`,
+`launch_gps:=true`
+
+Speeds: the drive controller is capped at 0.7 m/s (rover can do ~1.0); Nav2
+cruises at 0.4 m/s.
 
 ## Teleop
 
@@ -68,6 +72,12 @@ ros2 launch capybara_bringup capybara_nav2_simple.launch.py
 
 Joystick override is on by default: hold the deadman and you drive, release and
 Nav2 takes back over 0.5 s later (`twist_mux`, joystick priority 100 vs Nav2 10).
+
+Nav2 setup: `SmacPlanner2D` planner (no turning-radius constraint, unlike the
+car-style Hybrid-A* it replaced), `RegulatedPurePursuitController`, obstacle +
+inflation costmap layers off `/scan` only, and no spin recovery (the rover
+stalls pivoting in place). Global costmap 40x40 m at 10 cm, local 6x6 m at 5 cm,
+footprint 1.18 x 1.02 m, inflation 0.85 m.
 
 Check in Foxglove first: `/scan` shows what is *in front* and the antennas are
 gone, and `/zed/zed_node/odom` is publishing. Then send a 10 m goal:
@@ -115,6 +125,16 @@ tmux ls                    # list sessions
 ```
 
 If tmux is missing: `sudo apt install tmux` (admin).
+
+## Field checklist
+
+1. `ls -l /dev/rover_*` — udev names exist
+2. `python3 scripts/serial_timeout.py` — not `DISABLED`
+3. Measure the rover footprint and compare with `nav2_odom_only_params.yaml`
+4. Start the launch inside `tmux`
+5. In Foxglove: `/scan` front arc correct and antennas gone, `/zed/zed_node/odom` publishing, `/fix` has a fix
+6. Joystick override works before sending any Nav2 goal
+7. Start the bag, then drive
 
 ## Motor safety
 

@@ -39,7 +39,7 @@ diff_drive_controller:
 
     # ==================== VELOCITY/ACCELERATION LIMITS ====================
     linear.x.has_velocity_limits: true
-    linear.x.max_velocity: 1.0  # m/s — rover top safe speed
+    linear.x.max_velocity: 0.7  # m/s — safety cap; rover can do ~1.0
     linear.x.min_velocity: -0.5
     linear.x.has_acceleration_limits: true
     linear.x.max_acceleration: 0.2  # m/s^2
