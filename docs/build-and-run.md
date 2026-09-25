@@ -50,6 +50,31 @@ ros2 topic hz /zed/zed_node/odom     # VIO is publishing
 VIO drift test: drive a closed loop back to the exact start point, then compare the
 first and last `/zed/zed_node/pose` in the bag.
 
+## Outdoor Nav2 test
+
+```bash
+ros2 launch capybara_bringup capybara_nav2_simple.launch.py
+```
+
+Joystick override is on by default: hold the deadman and you drive, release and
+Nav2 takes back over 0.5 s later (`twist_mux`, joystick priority 100 vs Nav2 10).
+
+Check in Foxglove first: `/scan` shows what is *in front* and the antennas are
+gone, and `/zed/zed_node/odom` is publishing. Then send a 10 m goal:
+
+```bash
+ros2 topic pub --once /goal_pose geometry_msgs/PoseStamped \
+  "{header: {frame_id: 'odom'}, pose: {position: {x: 10.0}, orientation: {w: 1.0}}}"
+```
+
+Record it:
+
+```bash
+ros2 bag record -o ~/bags/nav2_$(date +%F_%H%M) \
+  /scan /zed/zed_node/odom /zed/zed_node/pose /tf /tf_static \
+  /nav_vel /joy_vel /diff_drive_controller/cmd_vel_unstamped /plan /goal_pose
+```
+
 ## Checks
 
 ```bash

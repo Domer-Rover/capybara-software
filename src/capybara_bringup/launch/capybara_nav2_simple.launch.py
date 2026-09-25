@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-"""Nav2 odom-only navigation with LD06 LIDAR obstacle detection.
+"""Outdoor Nav2 test: odom-only navigation with LD19 obstacle avoidance.
 
-Navigates purely in the odom frame using ZED visual odometry.
-No SLAM map, no AMCL localization. Send goals relative to the odom origin.
-Requires the Innomaker LD06 LIDAR to be physically connected (/dev/rover_lidar).
-The LIDAR driver is launched via capybara.launch.xml with launch_lidar:=true.
+Navigates in the odom frame using ZED visual odometry. No map, no AMCL, so
+goals are relative to wherever the rover booted. The joystick overrides Nav2
+at any time (hold the deadman); Nav2 resumes 0.5s after release.
 
-Usage:
-  ros2 launch capybara_bringup capybara_nav2_simple.launch.py use_mock_hardware:=false
+  ros2 launch capybara_bringup capybara_nav2_simple.launch.py
 
-Send a goal (e.g. 1.5m / ~5ft forward) in Foxglove on /goal_pose (frame: odom), or:
+Before driving, in Foxglove: check /scan shows the world in front (not behind)
+and that the antennas are gone, and that /zed/zed_node/odom is publishing.
+
+Send a 10 m straight-line goal:
   ros2 topic pub --once /goal_pose geometry_msgs/PoseStamped \
-    "{header: {frame_id: 'odom'}, pose: {position: {x: 1.5}, orientation: {w: 1.0}}}"
+    "{header: {frame_id: 'odom'}, pose: {position: {x: 10.0}, orientation: {w: 1.0}}}"
+
+Cancel:
+  ros2 action send_goal /navigate_to_pose ... is not needed — release is via the
+  joystick deadman, or Ctrl-C the launch and take over with the controller.
 """
 
 from launch import LaunchDescription
@@ -27,6 +32,18 @@ def generate_launch_description():
         'use_mock_hardware',
         default_value='false',
         description='Use mock hardware for simulation'
+    )
+
+    use_joystick_arg = DeclareLaunchArgument(
+        'use_joystick',
+        default_value='true',
+        description='Joystick override (recommended outdoors)'
+    )
+
+    launch_gps_arg = DeclareLaunchArgument(
+        'launch_gps',
+        default_value='false',
+        description='Launch the u-blox GPS node (publishes /fix)'
     )
 
     foxglove_port_arg = DeclareLaunchArgument(
@@ -53,6 +70,8 @@ def generate_launch_description():
             'launch_rviz': 'false',
             'launch_zed': 'true',
             'launch_lidar': 'true',
+            'use_joystick': LaunchConfiguration('use_joystick'),
+            'launch_gps': LaunchConfiguration('launch_gps'),
         }.items()
     )
 
@@ -76,7 +95,7 @@ def generate_launch_description():
         name='controller_server',
         output='screen',
         parameters=[nav2_params],
-        remappings=[('cmd_vel', '/diff_drive_controller/cmd_vel_unstamped')],
+        remappings=[('cmd_vel', '/nav_vel')],
     )
 
     planner_server = Node(
@@ -93,7 +112,7 @@ def generate_launch_description():
         name='behavior_server',
         output='screen',
         parameters=[nav2_params],
-        remappings=[('cmd_vel', '/diff_drive_controller/cmd_vel_unstamped')],
+        remappings=[('cmd_vel', '/nav_vel')],
     )
 
     bt_navigator = Node(
@@ -123,6 +142,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         use_mock_hardware_arg,
+        use_joystick_arg,
+        launch_gps_arg,
         foxglove_port_arg,
         # Robot base (controllers + ZED + LIDAR)
         capybara_launch,
