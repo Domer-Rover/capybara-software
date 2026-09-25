@@ -8,7 +8,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-PORT = "/dev/ttyTHS1"  # Update as needed for your system 
+PORT = "/dev/rover_roboclaw"
 BAUDRATE = 38400 
 
 # Using context manager for automatic resource handling

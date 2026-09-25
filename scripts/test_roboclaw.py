@@ -1,6 +1,6 @@
 from basicmicro import Basicmicro
 
-PORT = "/dev/ttyUSB1"
+PORT = "/dev/rover_roboclaw"
 
 # RoboClaw supports these baud rates
 BAUD_RATES = [38400]

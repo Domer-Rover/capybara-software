@@ -8,6 +8,12 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
+First time on a machine (admin, installs the packages the launch files run):
+
+```bash
+rosdep install --from-paths src --ignore-src -r -y
+```
+
 ## Launch
 
 ```bash
@@ -22,8 +28,10 @@ Common args: `use_mock_hardware:=true`, `launch_zed:=false`, `use_joystick:=true
 ## Teleop
 
 ```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/diff_drive_controller/cmd_vel_unstamped -p speed:=0.2 -p turn:=0.5
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/joy_vel -p speed:=0.2 -p turn:=0.5
 ```
+
+`/joy_vel` goes through `twist_mux`, so keyboard and joystick both outrank Nav2.
 
 ## Field test: GPS + joystick + recording
 
@@ -31,9 +39,10 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/dif
 ros2 launch capybara_bringup capybara_foxglove.launch.py launch_gps:=true use_joystick:=true
 ```
 
-Record a bag so drift can be measured afterwards (run from a writable directory):
+Record a bag so drift can be measured afterwards:
 
 ```bash
+mkdir -p ~/bags
 ros2 bag record -o ~/bags/$(date +%F_%H%M) \
   /zed/zed_node/odom /zed/zed_node/pose /zed/zed_node/imu/data \
   /fix /tf /tf_static /joint_states /diff_drive_controller/cmd_vel_unstamped
@@ -43,6 +52,7 @@ Quick sanity checks before driving off:
 
 ```bash
 ros2 topic echo /fix --once          # GPS has a fix (status.status >= 0)
+ros2 topic echo /scan --once         # LIDAR alive; check the arc in Foxglove too
 ros2 topic echo /joy --once          # controller is connected
 ros2 topic hz /zed/zed_node/odom     # VIO is publishing
 ```
@@ -82,6 +92,17 @@ ros2 control list_controllers
 ros2 topic hz /zed/zed_node/odom
 ros2 topic hz /scan
 ros2 run tf2_ros tf2_echo odom base_footprint
+```
+
+## Motor safety
+
+The RoboClaws stop on their own only if their serial timeout is set. With it at
+0, killing a launch leaves the last command latched and the rover keeps driving.
+Stop all launches first (the port opens once), then:
+
+```bash
+python3 scripts/serial_timeout.py            # read all three boards
+python3 scripts/serial_timeout.py --set 0.2  # 200 ms, resolution is 0.1 s
 ```
 
 ## Troubleshooting
