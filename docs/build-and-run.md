@@ -94,6 +94,28 @@ ros2 topic hz /scan
 ros2 run tf2_ros tf2_echo odom base_footprint
 ```
 
+## Running detached (survives losing WiFi)
+
+A launch started over SSH dies when the SSH connection drops, and with the
+RoboClaw serial timeout at 0 the rover keeps driving on its last command. Start
+it inside `tmux` so it keeps running when SSH, Foxglove, or both go away — the
+joystick still works because it runs on the rover.
+
+```bash
+tmux new -s rover          # start a named session
+# ... source the workspace and run the launch as usual ...
+# detach with: Ctrl-b then d
+```
+
+Reattach after reconnecting, from any SSH session:
+
+```bash
+tmux attach -t rover       # Ctrl-c inside stops the launch
+tmux ls                    # list sessions
+```
+
+If tmux is missing: `sudo apt install tmux` (admin).
+
 ## Motor safety
 
 The RoboClaws stop on their own only if their serial timeout is set. With it at
