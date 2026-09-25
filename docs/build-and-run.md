@@ -32,10 +32,10 @@ cruises at 0.4 m/s.
 ## Teleop
 
 ```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/joy_vel -p speed:=0.2 -p turn:=0.5
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/diff_drive_controller/cmd_vel_unstamped -p speed:=0.2 -p turn:=0.5
 ```
 
-`/joy_vel` goes through `twist_mux`, so keyboard and joystick both outrank Nav2.
+Joystick (`use_joystick:=true`): hold **L1** as the deadman, left stick to drive.
 
 ## Field test: GPS + joystick + recording
 
@@ -70,8 +70,10 @@ first and last `/zed/zed_node/pose` in the bag.
 ros2 launch capybara_bringup capybara_nav2_simple.launch.py
 ```
 
-Joystick override is on by default: hold the deadman and you drive, release and
-Nav2 takes back over 0.5 s later (`twist_mux`, joystick priority 100 vs Nav2 10).
+Joystick and Nav2 both publish straight to
+`/diff_drive_controller/cmd_vel_unstamped`, so they fight if both are active.
+To take over: Ctrl-C the launch, or cancel the goal, then drive with the
+joystick.
 
 Nav2 setup: `SmacPlanner2D` planner (no turning-radius constraint, unlike the
 car-style Hybrid-A* it replaced), `RegulatedPurePursuitController`, obstacle +
@@ -92,7 +94,7 @@ Record it:
 ```bash
 ros2 bag record -o ~/bags/nav2_$(date +%F_%H%M) \
   /scan /zed/zed_node/odom /zed/zed_node/pose /tf /tf_static \
-  /nav_vel /joy_vel /diff_drive_controller/cmd_vel_unstamped /plan /goal_pose
+  /diff_drive_controller/cmd_vel_unstamped /plan /goal_pose
 ```
 
 ## Checks
@@ -133,7 +135,7 @@ If tmux is missing: `sudo apt install tmux` (admin).
 3. Measure the rover footprint and compare with `nav2_odom_only_params.yaml`
 4. Start the launch inside `tmux`
 5. In Foxglove: `/scan` front arc correct and antennas gone, `/zed/zed_node/odom` publishing, `/fix` has a fix
-6. Joystick override works before sending any Nav2 goal
+6. Joystick drives the rover before sending any Nav2 goal
 7. Start the bag, then drive
 
 ## Motor safety

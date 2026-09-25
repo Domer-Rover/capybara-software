@@ -96,14 +96,7 @@
             <param name="axis_angular.yaw" value="0" />
             <param name="scale_linear.x" value="0.5" />
             <param name="scale_angular.yaw" value="1.0" />
-            <remap from="cmd_vel" to="/joy_vel" />
+            <remap from="cmd_vel" to="/diff_drive_controller/cmd_vel_unstamped" />
         </node>
     </group>
-    <!-- ==================== TWIST MUX ==================== -->
-    <!-- Always on. Joystick (/joy_vel) beats Nav2 (/nav_vel) whenever the
-         deadman is held; Nav2 resumes 0.5s after release. -->
-    <node pkg="twist_mux" exec="twist_mux" name="twist_mux" output="screen">
-        <param from="$(find-pkg-share capybara_bringup)/config/twist_mux.yaml" />
-        <remap from="cmd_vel_out" to="/diff_drive_controller/cmd_vel_unstamped" />
-    </node>
 </launch>
