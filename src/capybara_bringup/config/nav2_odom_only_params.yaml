@@ -53,7 +53,7 @@ controller_server:
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.35         # outdoor cruise; controller cap is 0.5
+      desired_linear_vel: 0.4          # outdoor cruise; rover tops out near 1.0
       lookahead_dist: 0.6
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
@@ -84,32 +84,19 @@ planner_server:
     introspection_mode: "disabled"
     planner_plugins: ["GridBased"]
     GridBased:
-      # Smac Hybrid-A* — kinematically feasible paths using a minimum turning radius.
-      # Avoids in-place rotations; paths start tangent to current heading.
-      plugin: "nav2_smac_planner/SmacPlannerHybrid"
-      tolerance: 0.25
+      # SmacPlanner2D: grid planner with no minimum turning radius. The rover is
+      # skid-steer, so the Hybrid-A* car model (DUBIN, min radius 0.4 m) refused
+      # paths the rover can actually drive.
+      plugin: "nav2_smac_planner/SmacPlanner2D"
+      tolerance: 0.5
       downsample_costmap: false
-      allow_unknown: true
+      downsampling_factor: 1
+      allow_unknown: true            # outdoor rolling costmap is mostly unknown
       max_iterations: 1000000
       max_on_approach_iterations: 1000
       max_planning_time: 3.5
-      motion_model_for_search: "DUBIN"           # forward-only, matches allow_reversing:false
-      angle_quantization_bins: 72                # 5° per bin
-      analytic_expansion_ratio: 3.5
-      analytic_expansion_max_length: 3.0
-      minimum_turning_radius: 0.4                # TUNE: shrink if walkways too tight
-      reverse_penalty: 2.1
-      change_penalty: 0.15
-      non_straight_penalty: 1.20
-      cost_penalty: 1.30
-      retrospective_penalty: 0.015
-      lookup_table_size: 20.0
-      cache_obstacle_heuristic: false            # rolling odom costmap, can't cache
-      smoother:
-        max_iterations: 1000
-        w_smooth: 0.3
-        w_data: 0.2
-        tolerance: 1.0e-10
+      cost_travel_multiplier: 2.0
+      use_final_approach_orientation: true
 
 behavior_server:
   ros__parameters:
@@ -118,9 +105,9 @@ behavior_server:
     global_costmap_topic: global_costmap/costmap_raw
     global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
-    spin:
-      plugin: "nav2_behaviors/Spin"
+    # no "spin": the rover stalls pivoting in place, which is also why
+    # use_rotate_to_heading is false. Recovery is backup + wait.
+    behavior_plugins: ["backup", "drive_on_heading", "wait", "assisted_teleop"]
     backup:
       plugin: "nav2_behaviors/BackUp"
     drive_on_heading:
@@ -151,7 +138,7 @@ global_costmap:
       transform_tolerance: 0.3
       global_frame: odom
       robot_base_frame: base_footprint
-      footprint: "[[-0.40, -0.51], [-0.40, 0.51], [0.40, 0.51], [0.40, -0.51]]"
+      footprint: "[[-0.59, -0.51], [-0.59, 0.51], [0.59, 0.51], [0.59, -0.51]]"  # wheels stick out past the chassis: axle 0.4572 + wheel radius 0.127. VERIFY by measuring.
       resolution: 0.10               # coarser outdoors: keeps Hybrid-A* search fast over 40x40 m
       rolling_window: true
       width: 40                      # goal must sit inside the rolling window: 40x40 covers a 10-15 m leg
@@ -178,7 +165,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 0.70         # just above circumscribed radius (~0.65m) — tight indoor fit
+        inflation_radius: 0.85         # must exceed the circumscribed radius (0.77 m for this footprint)
         cost_scaling_factor: 2.5       # sharper falloff, less pink spread
         inflate_unknown: false
         inflate_around_unknown: true
@@ -198,7 +185,7 @@ local_costmap:
       width: 6                       # was 3x3 — barely larger than the robot+inflation, no room to plan around anything
       height: 6
       resolution: 0.05
-      footprint: "[[-0.40, -0.51], [-0.40, 0.51], [0.40, 0.51], [0.40, -0.51]]"
+      footprint: "[[-0.59, -0.51], [-0.59, 0.51], [0.59, 0.51], [0.59, -0.51]]"  # wheels stick out past the chassis: axle 0.4572 + wheel radius 0.127. VERIFY by measuring.
       plugins: ["obstacle_layer", "inflation_layer"]   # add a ZED pointcloud voxel_layer here once LIDAR-only baseline is proven
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -221,7 +208,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 0.70
+        inflation_radius: 0.85
         cost_scaling_factor: 2.5
         inflate_unknown: false
         inflate_around_unknown: true
