@@ -77,13 +77,12 @@ void RoboClawUnit::write()
     if (use_duty_cycle_) {
       // Duty cycle mode: no encoders needed
       auto & [m1_duty, m2_duty] = duty_command_.fields;
+      // getDutyCycleCommand() already clamps to +/-32767 and returns int16_t
       if (joints[0]) {
-        m1_duty = static_cast<int16_t>(
-          std::clamp(joints[0]->getDutyCycleCommand(), -32767.0, 32767.0));
+        m1_duty = joints[0]->getDutyCycleCommand();
       }
       if (joints[1]) {
-        m2_duty = static_cast<int16_t>(
-          std::clamp(joints[1]->getDutyCycleCommand(), -32767.0, 32767.0));
+        m2_duty = joints[1]->getDutyCycleCommand();
       }
       interface_->write(duty_command_, address_);
     } else {
