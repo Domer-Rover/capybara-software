@@ -71,23 +71,19 @@ void RoboClawUnit::read()
 }
 
 // Write the motor command to the roboclaw
-void RoboClawUnit::write(double rear_boost)
+void RoboClawUnit::write()
 {
   try {
     if (use_duty_cycle_) {
       // Duty cycle mode: no encoders needed
       auto & [m1_duty, m2_duty] = duty_command_.fields;
       if (joints[0]) {
-        bool is_rear = joints[0]->name.find("rear") != std::string::npos;
-        double scale = is_rear ? rear_boost : 1.0;
         m1_duty = static_cast<int16_t>(
-          std::clamp(joints[0]->getDutyCycleCommand() * scale, -32767.0, 32767.0));
+          std::clamp(joints[0]->getDutyCycleCommand(), -32767.0, 32767.0));
       }
       if (joints[1]) {
-        bool is_rear = joints[1]->name.find("rear") != std::string::npos;
-        double scale = is_rear ? rear_boost : 1.0;
         m2_duty = static_cast<int16_t>(
-          std::clamp(joints[1]->getDutyCycleCommand() * scale, -32767.0, 32767.0));
+          std::clamp(joints[1]->getDutyCycleCommand(), -32767.0, 32767.0));
       }
       interface_->write(duty_command_, address_);
     } else {

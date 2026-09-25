@@ -19,8 +19,6 @@
                 <param name="serial_port">/dev/rover_roboclaw</param>
                 <!-- Duty cycle mode - bypasses velocity PID, no encoders needed -->
                 <param name="use_duty_cycle">true</param>
-                <!-- Rear wheel boost during turns (1.0 = disabled, 1.25 = 25% more duty) -->
-                <param name="rear_turn_boost">1.0</param>
             </hardware>
         </xacro:unless>
 

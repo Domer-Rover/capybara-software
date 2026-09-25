@@ -37,8 +37,7 @@ public:
   void read();
 
   // Convert the velocity command to motor command and write to the roboclaw.
-  // rear_boost: multiplier applied to rear wheel duty cycles (1.0 = no boost)
-  void write(double rear_boost = 1.0);
+  void write();
 
 private:
   roboclaw_serial::Interface::SharedPtr interface_;
