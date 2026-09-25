@@ -6,9 +6,6 @@ No SLAM map, no AMCL localization. Send goals relative to the odom origin.
 Requires the Innomaker LD06 LIDAR to be physically connected (/dev/rover_lidar).
 The LIDAR driver is launched via capybara.launch.xml with launch_lidar:=true.
 
-For LIDAR-free obstacle detection using ZED depth, use:
-  archive/capybara_nav2_zed.launch.py  (uses pointcloud_to_laserscan instead)
-
 Usage:
   ros2 launch capybara_bringup capybara_nav2_simple.launch.py use_mock_hardware:=false
 
