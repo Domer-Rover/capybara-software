@@ -24,7 +24,6 @@
   <exec_depend>nav2_lifecycle_manager</exec_depend>
   <exec_depend>nav2_map_server</exec_depend>
   <exec_depend>nav2_amcl</exec_depend>
-  <!-- ldlidar_stl_ros2 is not in the ROS index; install it from source -->
   <exec_depend>teleop_twist_keyboard</exec_depend>
   <exec_depend>joy</exec_depend>
   <exec_depend>laser_filters</exec_depend>
