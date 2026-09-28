@@ -106,6 +106,38 @@ ros2 topic hz /scan
 ros2 run tf2_ros tf2_echo odom base_footprint
 ```
 
+## Manual driving only
+
+One command: builds, sources, and launches the controllers plus joystick teleop.
+No ZED, LIDAR, GPS, Nav2, or Foxglove.
+
+```bash
+scripts/drive.sh              # build, then launch
+scripts/drive.sh --no-build   # launch straight away
+```
+
+Hold **L1** and use the left stick. Pair the controller once beforehand:
+
+```bash
+sudo bluetoothctl          # then: scan on / pair <MAC> / trust <MAC> / connect <MAC>
+ls /dev/input/js*          # js0 appears when it is connected
+```
+
+### Starting it on boot
+
+```bash
+sudo cp systemd/capybara-drive.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now capybara-drive
+journalctl -u capybara-drive -f    # watch it
+sudo systemctl disable --now capybara-drive   # turn it off again
+```
+
+Build by hand at least once before enabling: the unit runs with `--no-build`
+because a boot-time build is slow and hides errors. Set the RoboClaw serial
+timeout first (see Motor safety) so a crash or restart cannot leave the motors
+latched.
+
 ## Running detached (survives losing WiFi)
 
 A launch started over SSH dies when the SSH connection drops, and with the
