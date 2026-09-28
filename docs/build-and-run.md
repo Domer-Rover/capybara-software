@@ -123,7 +123,10 @@ sudo bluetoothctl          # then: scan on / pair <MAC> / trust <MAC> / connect 
 ls /dev/input/js*          # js0 appears when it is connected
 ```
 
-### Starting it on boot
+### Starting it on boot (optional, not enabled)
+
+The rover does not autostart today: SSH in and run the script. The unit below
+exists if that changes.
 
 ```bash
 sudo cp systemd/capybara-drive.service /etc/systemd/system/
