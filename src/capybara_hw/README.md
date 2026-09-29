@@ -8,9 +8,8 @@ ros2_control hardware interface for the RoboClaw motor controllers. Based on [ro
 
 | Param | Meaning |
 |---|---|
-| `serial_port` | e.g. `/dev/ttyUSB0` |
+| `serial_port` | e.g. `/dev/rover_roboclaw` |
 | `use_duty_cycle` | `true` = open-loop PWM, `false` = RoboClaw velocity PID (needs encoders) |
-| `rear_turn_boost` | Rear wheel duty multiplier when turning (`1.0` = off) |
 | `address`, `motor_type`, `qppr` | Per joint: board address, `M1`/`M2`, encoder ticks per rev |
 
 RoboClaws must be set to packet serial, 38400 baud, in Motion Studio.

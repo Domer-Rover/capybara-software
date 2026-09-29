@@ -72,33 +72,28 @@ void RoboClawUnit::read()
 }
 
 // Write the motor command to the roboclaw
-void RoboClawUnit::write(double rear_boost)
+void RoboClawUnit::write()
 {
-  auto scale_for = [rear_boost](const MotorJoint::SharedPtr & joint) {
-      return joint->name.find("rear") != std::string::npos ? rear_boost : 1.0;
-    };
-
   try {
     if (use_duty_cycle_) {
       // Duty cycle mode: no encoders needed
       auto & [m1_duty, m2_duty] = duty_command_.fields;
+      // getDutyCycleCommand() already clamps to +/-32767 and returns int16_t
       if (joints[0]) {
-        m1_duty = static_cast<int16_t>(
-          std::clamp(joints[0]->getDutyCycleCommand() * scale_for(joints[0]), -32767.0, 32767.0));
+        m1_duty = joints[0]->getDutyCycleCommand();
       }
       if (joints[1]) {
-        m2_duty = static_cast<int16_t>(
-          std::clamp(joints[1]->getDutyCycleCommand() * scale_for(joints[1]), -32767.0, 32767.0));
+        m2_duty = joints[1]->getDutyCycleCommand();
       }
       interface_->write(duty_command_, address_);
     } else {
       // Velocity PID mode: requires encoders
       auto & [m1_speed, m2_speed] = tick_rate_command_.fields;
       if (joints[0]) {
-        m1_speed = static_cast<int32_t>(joints[0]->getTickRateCommand() * scale_for(joints[0]));
+        m1_speed = joints[0]->getTickRateCommand();
       }
       if (joints[1]) {
-        m2_speed = static_cast<int32_t>(joints[1]->getTickRateCommand() * scale_for(joints[1]));
+        m2_speed = joints[1]->getTickRateCommand();
       }
       interface_->write(tick_rate_command_, address_);
     }

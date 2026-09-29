@@ -27,6 +27,12 @@ def generate_launch_description():
         description='Foxglove WebSocket port'
     )
 
+    launch_gps_arg = DeclareLaunchArgument(
+        'launch_gps',
+        default_value='false',
+        description='Launch the u-blox GPS node (publishes /fix)'
+    )
+
     use_joystick_arg = DeclareLaunchArgument(
         'use_joystick',
         default_value='false',
@@ -48,6 +54,7 @@ def generate_launch_description():
             'launch_rviz': 'false',
             'launch_zed': LaunchConfiguration('launch_zed'),
             'use_joystick': LaunchConfiguration('use_joystick'),
+            'launch_gps': LaunchConfiguration('launch_gps'),
         }.items()
     )
 
@@ -67,6 +74,7 @@ def generate_launch_description():
         launch_zed_arg,
         foxglove_port_arg,
         use_joystick_arg,
+        launch_gps_arg,
         capybara_launch,
         foxglove_bridge,
     ])

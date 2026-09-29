@@ -9,7 +9,7 @@ Step 3: Remove the jumper and reconnect RoboClaws.
 import serial
 import time
 
-PORT = "/dev/ttyTHS1"
+PORT = "/dev/ttyTHS1"  # 40-pin header UART that this test jumpers, not the RoboClaw adapter
 BAUD = 38400
 TEST_BYTES = b'\xaa\x55\x01\xff'
 

@@ -1,7 +1,7 @@
 from basicmicro import Basicmicro
 import time
 
-PORT = "/dev/ttyTHS1"
+PORT = "/dev/rover_roboclaw"
 BAUDRATE = 38400
 ADDRESS = 0x80
 

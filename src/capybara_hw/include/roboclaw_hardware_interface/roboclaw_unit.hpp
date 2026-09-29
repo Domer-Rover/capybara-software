@@ -39,8 +39,7 @@ public:
   void read();
 
   // Convert the velocity command to motor command and write to the roboclaw.
-  // rear_boost: multiplier applied to rear wheel commands (1.0 = no boost)
-  void write(double rear_boost = 1.0);
+  void write();
 
   // Command both motors to zero. Used on deactivation so the roboclaw does not
   // keep driving on the last command it received.

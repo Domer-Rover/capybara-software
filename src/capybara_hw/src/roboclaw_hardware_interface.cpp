@@ -72,19 +72,6 @@ CallbackReturn RoboClawHardwareInterface::on_init(const HardwareInfo & hardware_
     std::cerr << "[RoboClawHW] Duty cycle mode enabled (no encoders required)" << std::endl;
   }
 
-  // Read optional rear wheel turn boost (default 1.0 = disabled)
-  auto boost_it = hardware_info.hardware_parameters.find("rear_turn_boost");
-  if (boost_it != hardware_info.hardware_parameters.end()) {
-    try {
-      rear_turn_boost_ = std::stod(boost_it->second);
-    } catch (const std::exception &) {
-      std::cerr << "rear_turn_boost must be numeric (" << boost_it->second << " provided)."
-                << std::endl;
-      return CallbackReturn::ERROR;
-    }
-    std::cerr << "[RoboClawHW] Rear turn boost: " << rear_turn_boost_ << "x" << std::endl;
-  }
-
   // Validate parameters describing roboclaw joint configurations
   RoboClawConfiguration config;
   try {
@@ -141,25 +128,8 @@ std::vector<CommandInterface> RoboClawHardwareInterface::export_command_interfac
 
 return_type RoboClawHardwareInterface::write(const rclcpp::Time &, const rclcpp::Duration &)
 {
-  // Detect turning: sum left vs right velocity commands across all units.
-  // diff_drive_controller sends identical velocity to all wheels on each side,
-  // so left_vel != right_vel only when angular component is non-zero.
-  double left_vel = 0.0, right_vel = 0.0;
   for (auto & roboclaw : roboclaw_units_) {
-    for (auto & joint : roboclaw.joints) {
-      if (!joint) {continue;}
-      if (joint->name.find("left") != std::string::npos) {
-        left_vel += joint->getVelocityCommand();
-      } else {
-        right_vel += joint->getVelocityCommand();
-      }
-    }
-  }
-  bool is_turning = std::abs(left_vel - right_vel) > 0.05;
-  double boost = is_turning ? rear_turn_boost_ : 1.0;
-
-  for (auto & roboclaw : roboclaw_units_) {
-    roboclaw.write(boost);
+    roboclaw.write();
   }
   return return_type::OK;
 }
