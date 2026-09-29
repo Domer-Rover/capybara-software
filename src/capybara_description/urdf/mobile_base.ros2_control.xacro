@@ -3,6 +3,11 @@
 
     <!-- Hardware mode - mock for simulation, real for actual RoboClaw -->
     <xacro:arg name="use_mock_hardware" default="true" />
+    <!-- Duty cycle (open loop) until the encoders are verified and the RoboClaw
+         velocity PID is tuned in Motion Studio. Then launch with
+         use_duty_cycle:=false to run closed loop. -->
+    <xacro:arg name="use_duty_cycle" default="true" />
+    <xacro:arg name="serial_port" default="/dev/rover_roboclaw" />
 
     <ros2_control name="CapybaraRoboClawSystem" type="system">
         <!-- Mock hardware for simulation or testing without actual RoboClaw -->
@@ -16,9 +21,9 @@
         <xacro:unless value="$(arg use_mock_hardware)">
             <hardware>
                 <plugin>capybara_hw/RoboClawHardwareInterface</plugin>
-                <param name="serial_port">/dev/rover_roboclaw</param>
+                <param name="serial_port">$(arg serial_port)</param>
                 <!-- Duty cycle mode - bypasses velocity PID, no encoders needed -->
-                <param name="use_duty_cycle">true</param>
+                <param name="use_duty_cycle">$(arg use_duty_cycle)</param>
             </hardware>
         </xacro:unless>
 
