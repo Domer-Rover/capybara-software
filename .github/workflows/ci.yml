@@ -14,12 +14,15 @@ concurrency:
 env:
   # ZED packages need the ZED SDK + CUDA, which are only available on the Jetson
   SKIP_PACKAGES: zed_components zed_wrapper zed_ros2
+  # Third-party code: built so breakage is caught, but not linted/tested
+  SKIP_TEST_PACKAGES: ldlidar_stl_ros2
   # First-party + buildable vendor packages; rosdep only resolves deps for these
   DEP_PATHS: >-
     src/capybara_bringup
     src/capybara_description
     src/capybara_hw
     src/imu_package
+    src/vendors/ldlidar_stl_ros2
     src/vendors/roboclaw_serial
 
 jobs:
@@ -56,7 +59,9 @@ jobs:
       - name: Test
         run: |
           source /opt/ros/humble/setup.bash
-          colcon test --packages-skip $SKIP_PACKAGES --event-handlers console_cohesion+
+          colcon test \
+            --packages-skip $SKIP_PACKAGES $SKIP_TEST_PACKAGES \
+            --event-handlers console_cohesion+
           colcon test-result --verbose
 
       - name: Upload logs and test results
