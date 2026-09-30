@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A newer push to the same branch/PR cancels the run in progress
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # ZED packages need the ZED SDK + CUDA, which are only available on the Jetson
+  SKIP_PACKAGES: zed_components zed_wrapper zed_ros2
+  # Third-party code: built so breakage is caught, but not linted/tested
+  SKIP_TEST_PACKAGES: ldlidar_stl_ros2
+  # First-party + buildable vendor packages; rosdep only resolves deps for these
+  DEP_PATHS: >-
+    src/capybara_bringup
+    src/capybara_description
+    src/capybara_hw
+    src/imu_package
+    src/vendors/ldlidar_stl_ros2
+    src/vendors/roboclaw_serial
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    container: ros:humble-ros-base
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache rosdep index
+        uses: actions/cache@v4
+        with:
+          path: ~/.ros/rosdep
+          key: rosdep-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: rosdep-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          rosdep update --rosdistro humble
+          rosdep install --from-paths $DEP_PATHS --ignore-src --rosdistro humble -y
+
+      - name: Build
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build \
+            --packages-skip $SKIP_PACKAGES \
+            --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            --event-handlers console_cohesion+
+
+      - name: Test
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon test \
+            --packages-skip $SKIP_PACKAGES $SKIP_TEST_PACKAGES \
+            --event-handlers console_cohesion+
+          colcon test-result --verbose
+
+      - name: Upload logs and test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: colcon-logs
+          path: |
+            log/
+            build/*/test_results/
+          if-no-files-found: ignore
