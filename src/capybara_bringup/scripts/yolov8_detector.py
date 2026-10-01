@@ -54,7 +54,7 @@ class Yolov8Detector(Node):
         self.declare_parameter('model_path', _DEFAULT_MODEL)
         self.declare_parameter('target_classes', ['Bottle', 'Hammer'])
         self.declare_parameter('confidence_threshold', 0.40)
-        self.declare_parameter('image_topic', '/zed/zed_node/left/image_rect_color')
+        self.declare_parameter('image_topic', '/zed/zed_node/rgb/color/rect/image')
         self.declare_parameter('camera_frame', 'zed_left_camera_frame_optical')
 
         model_path = self.get_parameter('model_path').value
