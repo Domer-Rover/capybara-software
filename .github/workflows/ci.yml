@@ -45,6 +45,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
+          apt-get install -y liburdfdom-tools python3-yaml
           rosdep update --rosdistro humble
           rosdep install --from-paths $DEP_PATHS --ignore-src --rosdistro humble -y
 
@@ -55,6 +56,27 @@ jobs:
             --packages-skip $SKIP_PACKAGES \
             --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             --event-handlers console_cohesion+
+
+      - name: Check URDF
+        run: |
+          source install/setup.bash
+          urdf=src/capybara_description/urdf/capybara.urdf.xacro
+          for mock in true false; do
+            echo "::group::use_mock_hardware:=$mock"
+            xacro "$urdf" use_mock_hardware:=$mock > /tmp/capybara_$mock.urdf
+            check_urdf /tmp/capybara_$mock.urdf
+            # capybara.launch.xml passes robot_description through YAML parsing, so
+            # text like 'TODO: x' in a comment breaks the launch.
+            python3 -c "import sys, yaml; v = yaml.safe_load(open(sys.argv[1])); assert isinstance(v, str), 'robot_description does not parse as a plain YAML string'" /tmp/capybara_$mock.urdf
+            echo "::endgroup::"
+          done
+
+      - name: Check wheel parameters match
+        run: python3 .github/scripts/check_wheel_params.py
+
+      - name: Check Python syntax
+        run: |
+          python3 -m py_compile src/capybara_bringup/launch/*.py scripts/*.py
 
       - name: Test
         run: |
