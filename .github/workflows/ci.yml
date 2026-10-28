@@ -1,3 +1,10 @@
+# Shared CI for the Domer Rover robot workspaces.
+#
+# This file is intentionally IDENTICAL in capybara-software and
+# gerbil-software except for the ROBOT value below. Both repos use the same
+# layout (src/<robot>_bringup, src/<robot>_description, src/<robot>_hw,
+# src/imu_package, src/vendors/*), so every path is derived from $ROBOT.
+# Keep it that way: fix CI in one repo, copy the file to the other.
 name: ci
 
 on:
@@ -12,22 +19,23 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # ZED packages need the ZED SDK + CUDA, which are only available on the Jetson
-  SKIP_PACKAGES: zed_components zed_wrapper zed_ros2
-  # Third-party code: built so breakage is caught, but not linted/tested
+  # The only line that differs between repos
+  ROBOT: capybara
+
+  # ZED packages need the ZED SDK + CUDA, which GitHub runners do not have.
+  # zed_debug also carries a COLCON_IGNORE; listed so the skip does not
+  # depend on that file being present.
+  SKIP_PACKAGES: zed_components zed_wrapper zed_ros2 zed_debug
+
+  # Third-party code: built so breakage is caught, but not linted or tested
   SKIP_TEST_PACKAGES: ldlidar_stl_ros2
-  # First-party + buildable vendor packages; rosdep only resolves deps for these
-  DEP_PATHS: >-
-    src/capybara_bringup
-    src/capybara_description
-    src/capybara_hw
-    src/imu_package
-    src/vendors/ldlidar_stl_ros2
-    src/vendors/roboclaw_serial
+
+  DEBIAN_FRONTEND: noninteractive
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest so a runner image bump cannot break CI
+    runs-on: ubuntu-22.04
     container: ros:humble-ros-base
     defaults:
       run:
@@ -47,27 +55,39 @@ jobs:
           apt-get update
           apt-get install -y liburdfdom-tools python3-yaml
           rosdep update --rosdistro humble
-          rosdep install --from-paths $DEP_PATHS --ignore-src --rosdistro humble -y
+          # Only first-party and buildable vendor packages. The zed_* paths
+          # are left out because resolving their deps pulls in the ZED SDK.
+          rosdep install -y --ignore-src --rosdistro humble --from-paths \
+            src/${ROBOT}_bringup \
+            src/${ROBOT}_description \
+            src/${ROBOT}_hw \
+            src/imu_package \
+            src/vendors/ldlidar_stl_ros2 \
+            src/vendors/roboclaw_serial
 
       - name: Build
         run: |
           source /opt/ros/humble/setup.bash
+          # --packages-ignore, not --packages-skip: the ZED packages cannot be
+          # configured here at all, so drop them from the graph entirely.
           colcon build \
-            --packages-skip $SKIP_PACKAGES \
+            --packages-ignore $SKIP_PACKAGES \
             --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             --event-handlers console_cohesion+
 
       - name: Check URDF
         run: |
           source install/setup.bash
-          urdf=src/capybara_description/urdf/capybara.urdf.xacro
+          urdf=src/${ROBOT}_description/urdf/${ROBOT}.urdf.xacro
           for mock in true false; do
             echo "::group::use_mock_hardware:=$mock"
-            xacro "$urdf" use_mock_hardware:=$mock > /tmp/capybara_$mock.urdf
-            check_urdf /tmp/capybara_$mock.urdf
-            # capybara.launch.xml passes robot_description through YAML parsing, so
-            # text like 'TODO: x' in a comment breaks the launch.
-            python3 -c "import sys, yaml; v = yaml.safe_load(open(sys.argv[1])); assert isinstance(v, str), 'robot_description does not parse as a plain YAML string'" /tmp/capybara_$mock.urdf
+            xacro "$urdf" use_mock_hardware:=$mock > /tmp/${ROBOT}_$mock.urdf
+            check_urdf /tmp/${ROBOT}_$mock.urdf
+            # <robot>.launch.xml passes robot_description through a value=
+            # attribute, which the launch parser reads as YAML. Text like
+            # 'TODO: x' in a xacro comment turns it into a mapping and the
+            # launch dies with "mapping values are not allowed here".
+            python3 -c "import sys, yaml; v = yaml.safe_load(open(sys.argv[1])); assert isinstance(v, str), 'robot_description does not parse as a plain YAML string'" /tmp/${ROBOT}_$mock.urdf
             echo "::endgroup::"
           done
 
@@ -76,13 +96,14 @@ jobs:
 
       - name: Check Python syntax
         run: |
-          python3 -m py_compile src/capybara_bringup/launch/*.py scripts/*.py
+          # Every first-party Python file; vendored code is not ours to lint
+          python3 -m py_compile $(git ls-files '*.py' | grep -v '^src/vendors/')
 
       - name: Test
         run: |
           source /opt/ros/humble/setup.bash
           colcon test \
-            --packages-skip $SKIP_PACKAGES $SKIP_TEST_PACKAGES \
+            --packages-ignore $SKIP_PACKAGES $SKIP_TEST_PACKAGES \
             --event-handlers console_cohesion+
           colcon test-result --verbose
 
