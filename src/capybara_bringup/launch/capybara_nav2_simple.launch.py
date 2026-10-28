@@ -34,6 +34,12 @@ def generate_launch_description():
         description='Use mock hardware for simulation'
     )
 
+    use_duty_cycle_arg = DeclareLaunchArgument(
+        'use_duty_cycle',
+        default_value='true',
+        description='false = RoboClaw velocity PID (needs encoders + tuned PID)'
+    )
+
     use_joystick_arg = DeclareLaunchArgument(
         'use_joystick',
         default_value='true',
@@ -67,6 +73,7 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'use_mock_hardware': LaunchConfiguration('use_mock_hardware'),
+            'use_duty_cycle': LaunchConfiguration('use_duty_cycle'),
             'launch_rviz': 'false',
             'launch_zed': 'true',
             'launch_lidar': 'true',
@@ -142,6 +149,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         use_mock_hardware_arg,
+        use_duty_cycle_arg,
         use_joystick_arg,
         launch_gps_arg,
         foxglove_port_arg,

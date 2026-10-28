@@ -1,6 +1,8 @@
 <launch>
     <!-- ==================== ARGUMENTS ==================== -->
     <arg name="use_mock_hardware" default="true" />
+    <arg name="use_duty_cycle" default="true" description="false = RoboClaw velocity PID (needs encoders + tuned PID)" />
+    <arg name="serial_port" default="/dev/rover_roboclaw" />
     <arg name="launch_rviz" default="false" />
     <arg name="launch_zed" default="false" />
     <arg name="launch_lidar" default="false" />
@@ -16,13 +18,13 @@
     <!-- ==================== ROBOT STATE PUBLISHER ==================== -->
     <node pkg="robot_state_publisher" exec="robot_state_publisher">
         <param name="robot_description"
-               value="$(command 'xacro $(var urdf_path) use_mock_hardware:=$(var use_mock_hardware)')" />
+               value="$(command 'xacro $(var urdf_path) use_mock_hardware:=$(var use_mock_hardware) use_duty_cycle:=$(var use_duty_cycle) serial_port:=$(var serial_port)')" />
     </node>
 
     <!-- ==================== ROS2 CONTROL ==================== -->
     <node pkg="controller_manager" exec="ros2_control_node" output="screen">
         <param name="robot_description"
-               value="$(command 'xacro $(var urdf_path) use_mock_hardware:=$(var use_mock_hardware)')" />
+               value="$(command 'xacro $(var urdf_path) use_mock_hardware:=$(var use_mock_hardware) use_duty_cycle:=$(var use_duty_cycle) serial_port:=$(var serial_port)')" />
         <param from="$(find-pkg-share capybara_bringup)/config/capybara_controllers.yaml" />
     </node>
 

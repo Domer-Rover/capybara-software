@@ -27,6 +27,22 @@
   <exec_depend>teleop_twist_keyboard</exec_depend>
   <exec_depend>joy</exec_depend>
   <exec_depend>laser_filters</exec_depend>
+  <exec_depend>ldlidar_stl_ros2</exec_depend>
+  <exec_depend>capybara_description</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <!-- Nav2 plugins selected in config/nav2_*params.yaml -->
+  <exec_depend>nav2_regulated_pure_pursuit_controller</exec_depend>
+  <exec_depend>nav2_smac_planner</exec_depend>
+  <exec_depend>nav2_navfn_planner</exec_depend>
+  <!-- Detector scripts (aruco_detector.py, yolov8_detector.py) -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
