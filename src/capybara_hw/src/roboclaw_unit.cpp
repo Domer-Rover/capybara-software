@@ -46,6 +46,11 @@ RoboClawUnit::RoboClawUnit(
 // Read the encoder counts from the roboclaw and update position state
 void RoboClawUnit::read()
 {
+  // Reads were given up on after repeated failure. See the note in the header.
+  if (encoder_reads_disabled_) {
+    return;
+  }
+
   try {
     // Read both encoders in single transaction
     interface_->read(encoder_state_, address_);
@@ -58,6 +63,8 @@ void RoboClawUnit::read()
     if (joints[1]) {
       joints[1]->setPositionState(m2_ticks);
     }
+
+    consecutive_read_failures_ = 0;
   } catch (const std::exception & e) {
     auto now = std::chrono::steady_clock::now();
     if (!last_read_error_log_ ||
@@ -66,6 +73,21 @@ void RoboClawUnit::read()
       std::cerr << "[RoboClawUnit] Read error from RoboClaw 0x" << std::hex
                 << static_cast<int>(address_) << std::dec << ": " << e.what() << std::endl;
       last_read_error_log_ = now;
+    }
+
+    if (++consecutive_read_failures_ >= kMaxConsecutiveReadFailures) {
+      encoder_reads_disabled_ = true;
+      std::cerr << "[RoboClawUnit] GIVING UP on encoder reads from RoboClaw 0x"
+                << std::hex << static_cast<int>(address_) << std::dec << " after "
+                << kMaxConsecutiveReadFailures << " consecutive failures. This board's"
+                << " joints will report a FROZEN position from now on.\n"
+                << "  The motors are unaffected -- writes use their own path, and in"
+                << " velocity mode the PID runs on the RoboClaw itself off its own"
+                << " encoder reading, not off this one.\n"
+                << "  What IS lost is wheel odometry for these two joints. Harmless"
+                << " while driving manually open loop; NOT acceptable before trusting"
+                << " odometry or running Nav2. Fix the encoder wiring and restart."
+                << std::endl;
     }
     return;
   }

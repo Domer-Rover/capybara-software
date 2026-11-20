@@ -59,6 +59,16 @@ private:
   // one roboclaw's errors do not suppress another's
   std::optional<std::chrono::steady_clock::time_point> last_read_error_log_;
   std::optional<std::chrono::steady_clock::time_point> last_write_error_log_;
+
+  // Encoder reads are abandoned after this many consecutive failures. A failed
+  // read costs a BLOCKING serial timeout, three boards per control cycle, and
+  // at a 20 Hz update rate that is enough to starve controller_manager of the
+  // time it needs to answer service calls -- the stack then looks dead from
+  // other terminals while still running. Giving up is strictly better than
+  // paying that cost forever for data that is not arriving.
+  static constexpr unsigned kMaxConsecutiveReadFailures = 20;
+  unsigned consecutive_read_failures_{0};
+  bool encoder_reads_disabled_{false};
 };
 }  // namespace roboclaw_hardware_interface
 
