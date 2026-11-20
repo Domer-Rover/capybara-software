@@ -1,6 +1,11 @@
 <launch>
     <!-- ==================== ARGUMENTS ==================== -->
-    <arg name="use_mock_hardware" default="true" />
+    <!-- Defaults to the REAL robot. This was true, while the Foxglove launch
+         passed false, so the same rover behaved differently depending on which
+         file you started -- and the failure is silent: mock hardware accepts
+         every command and reports perfect joint states while nothing moves.
+         Ask for the simulation explicitly instead. -->
+    <arg name="use_mock_hardware" default="false" />
     <arg name="use_duty_cycle" default="true" description="false = RoboClaw velocity PID (needs encoders + tuned PID)" />
     <arg name="serial_port" default="/dev/rover_roboclaw" />
     <arg name="launch_rviz" default="false" />
