@@ -36,7 +36,7 @@ Capybara is Domer Rover's entry for the **University Rover Challenge (URC)**, an
 | `src/capybara_bringup` | Launch files, Nav2/SLAM/controller configs, maps |
 | `src/capybara_description` | URDF and `ros2_control` block |
 | `src/capybara_hw` | RoboClaw hardware interface for `ros2_control` |
-| `src/imu_package` | BNO055 driver (unused; the ZED2i IMU is used) |
+| `src/capybara_imu` | BNO055 IMU driver (not on the robot yet; the ZED2i IMU is used)| BNO055 driver (unused; the ZED2i IMU is used) |
 | `src/vendors` | ZED ROS 2 wrapper, `roboclaw_serial` |
 | `scripts` | Developer onboarding and hardware test scripts |
 | `docker` | Dockerfiles (out of date) |
